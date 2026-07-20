@@ -9,10 +9,18 @@ CREATE TABLE IF NOT EXISTS profiles (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Ensure all columns exist (in case table was created by an older migration)
+-- Ensure all columns exist (in case table was created by an older migration or Supabase defaults)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS full_name TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'employee';
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'profiles_role_check') THEN
+    EXECUTE 'ALTER TABLE profiles ADD CONSTRAINT profiles_role_check CHECK (role IN (''admin'', ''employee''))';
+  END IF;
+END $$;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
 
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER
