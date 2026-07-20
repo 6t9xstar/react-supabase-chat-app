@@ -1,0 +1,10 @@
+---
+import Layout from '../layouts/Layout.astro'
+import LoginForm from '../components/auth/LoginForm'
+---
+
+<Layout>
+  <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-900 via-brand-800 to-brand-950">
+    <LoginForm client:load />
+  </div>
+</Layout>
