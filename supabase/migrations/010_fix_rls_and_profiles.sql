@@ -1,17 +1,22 @@
 -- 010: Fix RLS recursion + backfill missing profiles
 
--- Drop all problematic old policies first
-DROP POLICY IF EXISTS "cm_select" ON conversation_members;
-DROP POLICY IF EXISTS "profiles_admin_update" ON profiles;
+-- Drop ALL existing policies first
+DROP POLICY IF EXISTS "profiles_select" ON profiles;
 DROP POLICY IF EXISTS "profiles_update_own" ON profiles;
+DROP POLICY IF EXISTS "profiles_admin_update" ON profiles;
 DROP POLICY IF EXISTS "conversations_select" ON conversations;
 DROP POLICY IF EXISTS "conversations_insert" ON conversations;
 DROP POLICY IF EXISTS "conversations_update_admin" ON conversations;
+DROP POLICY IF EXISTS "cm_select" ON conversation_members;
 DROP POLICY IF EXISTS "cm_insert_admin" ON conversation_members;
 DROP POLICY IF EXISTS "cm_delete_admin" ON conversation_members;
 DROP POLICY IF EXISTS "messages_select" ON messages;
 DROP POLICY IF EXISTS "messages_insert" ON messages;
+DROP POLICY IF EXISTS "messages_update" ON messages;
 DROP POLICY IF EXISTS "attachments_select" ON attachments;
+DROP POLICY IF EXISTS "attachments_insert" ON attachments;
+DROP POLICY IF EXISTS "mr_select" ON message_reads;
+DROP POLICY IF EXISTS "mr_insert" ON message_reads;
 DROP POLICY IF EXISTS "authenticated_upload" ON storage.objects;
 DROP POLICY IF EXISTS "member_read" ON storage.objects;
 DROP POLICY IF EXISTS "owner_delete" ON storage.objects;
