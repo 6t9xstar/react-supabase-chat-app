@@ -47,7 +47,7 @@ CREATE POLICY "profiles_admin_update" ON profiles FOR UPDATE TO authenticated
   USING (public.is_admin());
 
 CREATE POLICY "conversations_select" ON conversations FOR SELECT TO authenticated
-  USING (public.is_conversation_member(id));
+  USING (public.is_conversation_member(id) OR created_by = auth.uid());
 
 CREATE POLICY "conversations_insert" ON conversations FOR INSERT TO authenticated
   WITH CHECK (type = 'direct' OR public.is_admin());
@@ -58,8 +58,18 @@ CREATE POLICY "conversations_update_admin" ON conversations FOR UPDATE TO authen
 CREATE POLICY "cm_select" ON conversation_members FOR SELECT TO authenticated
   USING (user_id = auth.uid() OR public.is_conversation_member(conversation_id));
 
-CREATE POLICY "cm_insert_admin" ON conversation_members FOR INSERT TO authenticated
-  WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS "cm_insert_admin" ON conversation_members;
+CREATE POLICY "cm_insert" ON conversation_members FOR INSERT TO authenticated
+  WITH CHECK (
+    public.is_admin()
+    OR user_id = auth.uid()
+    OR (
+      EXISTS (
+        SELECT 1 FROM conversations c
+        WHERE c.id = conversation_id AND c.type = 'direct' AND c.created_by = auth.uid()
+      )
+    )
+  );
 
 CREATE POLICY "cm_delete_admin" ON conversation_members FOR DELETE TO authenticated
   USING (public.is_admin());

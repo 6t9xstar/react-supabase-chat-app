@@ -160,7 +160,7 @@ CREATE POLICY "profiles_admin_update" ON profiles FOR UPDATE TO authenticated
 
 DROP POLICY IF EXISTS "conversations_select" ON conversations;
 CREATE POLICY "conversations_select" ON conversations FOR SELECT TO authenticated
-  USING (public.is_conversation_member(id));
+  USING (public.is_conversation_member(id) OR created_by = auth.uid());
 
 DROP POLICY IF EXISTS "conversations_insert" ON conversations;
 CREATE POLICY "conversations_insert" ON conversations FOR INSERT TO authenticated
@@ -177,9 +177,19 @@ CREATE POLICY "cm_select" ON conversation_members FOR SELECT TO authenticated
     OR public.is_conversation_member(conversation_id)
   );
 
+DROP POLICY IF EXISTS "cm_insert" ON conversation_members;
 DROP POLICY IF EXISTS "cm_insert_admin" ON conversation_members;
-CREATE POLICY "cm_insert_admin" ON conversation_members FOR INSERT TO authenticated
-  WITH CHECK (public.is_admin());
+CREATE POLICY "cm_insert" ON conversation_members FOR INSERT TO authenticated
+  WITH CHECK (
+    public.is_admin()
+    OR user_id = auth.uid()
+    OR (
+      EXISTS (
+        SELECT 1 FROM conversations c
+        WHERE c.id = conversation_id AND c.type = 'direct' AND c.created_by = auth.uid()
+      )
+    )
+  );
 
 DROP POLICY IF EXISTS "cm_delete_admin" ON conversation_members;
 CREATE POLICY "cm_delete_admin" ON conversation_members FOR DELETE TO authenticated
