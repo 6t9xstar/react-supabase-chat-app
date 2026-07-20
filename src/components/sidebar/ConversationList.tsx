@@ -23,17 +23,17 @@ export default function ConversationList({ userId, searchQuery, activeConversati
 
   if (loading) {
     return (
-      <div class="flex items-center justify-center py-12">
-        <div class="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      <div className="flex items-center justify-center py-12">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
       </div>
     )
   }
 
   if (filtered.length === 0) {
     return (
-      <div class="flex flex-col items-center justify-center py-12 text-center">
-        <MessageSquare class="mb-3 h-8 w-8 text-gray-300" />
-        <p class="text-sm text-gray-500">
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <MessageSquare className="mb-3 h-8 w-8 text-gray-300" />
+        <p className="text-sm text-gray-500">
           {searchQuery ? 'No conversations match your search' : 'No conversations yet'}
         </p>
       </div>
@@ -41,7 +41,7 @@ export default function ConversationList({ userId, searchQuery, activeConversati
   }
 
   return (
-    <div class="divide-y divide-gray-100">
+    <div className="divide-y divide-gray-100">
       {filtered.map((conv) => (
         <ConversationItem
           key={conv.id}

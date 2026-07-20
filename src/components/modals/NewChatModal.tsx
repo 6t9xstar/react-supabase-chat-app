@@ -64,29 +64,29 @@ export default function NewChatModal({ open, onClose, userId, onConversationCrea
   if (!mode) {
     return (
       <Modal open={open} onClose={handleClose} title="New Chat">
-        <div class="space-y-3">
+        <div className="space-y-3">
           <button
             onClick={() => setMode('direct')}
-            class="flex w-full items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-left hover:bg-gray-50"
+            className="flex w-full items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-left hover:bg-gray-50"
           >
-            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100">
-              <span class="text-lg">💬</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100">
+              <span className="text-lg">💬</span>
             </div>
             <div>
-              <p class="text-sm font-medium text-gray-900">Direct Message</p>
-              <p class="text-xs text-gray-500">Chat with another employee</p>
+              <p className="text-sm font-medium text-gray-900">Direct Message</p>
+              <p className="text-xs text-gray-500">Chat with another employee</p>
             </div>
           </button>
           <button
             onClick={() => setMode('group')}
-            class="flex w-full items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-left hover:bg-gray-50"
+            className="flex w-full items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-left hover:bg-gray-50"
           >
-            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-              <span class="text-lg">👥</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+              <span className="text-lg">👥</span>
             </div>
             <div>
-              <p class="text-sm font-medium text-gray-900">Group Chat</p>
-              <p class="text-xs text-gray-500">Create a team conversation</p>
+              <p className="text-sm font-medium text-gray-900">Group Chat</p>
+              <p className="text-xs text-gray-500">Create a team conversation</p>
             </div>
           </button>
         </div>
@@ -96,54 +96,54 @@ export default function NewChatModal({ open, onClose, userId, onConversationCrea
 
   return (
     <Modal open={open} onClose={handleClose} title={mode === 'group' ? 'Create Group' : 'New Direct Message'}>
-      <div class="space-y-4">
+      <div className="space-y-4">
         {mode === 'group' && (
           <input
             type="text"
             value={groupName}
             onChange={(e) => setGroupName(e.target.value)}
             placeholder="Group name"
-            class="block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+            className="block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
           />
         )}
 
-        <div class="relative">
-          <Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder="Search employees..."
-            class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-3 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+            className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-3 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
           />
         </div>
 
-        <div class="max-h-64 overflow-y-auto space-y-1">
+        <div className="max-h-64 overflow-y-auto space-y-1">
           {profiles
             .filter((p) => p.id !== userId)
             .map((p) => (
               <button
                 key={p.id}
                 onClick={() => toggleSelect(p.id)}
-                class={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left hover:bg-gray-50 ${
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left hover:bg-gray-50 ${
                   selectedIds.includes(p.id) ? 'bg-brand-50' : ''
                 }`}
               >
                 <Avatar name={p.full_name} size="sm" />
-                <div class="flex-1 min-w-0">
-                  <p class="truncate text-sm font-medium text-gray-900">{p.full_name}</p>
-                  <p class="text-xs text-gray-500">{p.role}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="truncate text-sm font-medium text-gray-900">{p.full_name}</p>
+                  <p className="text-xs text-gray-500">{p.email ?? p.role}</p>
                 </div>
                 {selectedIds.includes(p.id) && (
-                  <div class="h-5 w-5 rounded-full bg-brand-500 flex items-center justify-center">
-                    <span class="text-xs text-white">✓</span>
+                  <div className="h-5 w-5 rounded-full bg-brand-500 flex items-center justify-center">
+                    <span className="text-xs text-white">✓</span>
                   </div>
                 )}
               </button>
             ))}
         </div>
 
-        <div class="flex justify-end gap-3 pt-2">
+        <div className="flex justify-end gap-3 pt-2">
           <Button variant="secondary" onClick={() => setMode(null)}>Back</Button>
           <Button
             onClick={handleCreate}
@@ -153,7 +153,7 @@ export default function NewChatModal({ open, onClose, userId, onConversationCrea
               (mode === 'group' && (!groupName.trim() || selectedIds.length === 0))
             }
           >
-            {creating ? <Loader2 class="h-4 w-4 animate-spin" /> : (mode === 'group' ? 'Create Group' : 'Start Chat')}
+            {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : (mode === 'group' ? 'Create Group' : 'Start Chat')}
           </Button>
         </div>
       </div>

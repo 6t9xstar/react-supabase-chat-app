@@ -21,7 +21,7 @@ const sizeMap = {
 export default function Button({ variant = 'primary', size = 'md', children, className = '', disabled, ...props }: ButtonProps) {
   return (
     <button
-      class={`inline-flex items-center justify-center rounded-lg font-medium transition disabled:opacity-50 ${variantMap[variant]} ${sizeMap[size]} ${className}`}
+      className={`inline-flex items-center justify-center rounded-lg font-medium transition disabled:opacity-50 ${variantMap[variant]} ${sizeMap[size]} ${className}`}
       disabled={disabled}
       {...props}
     >

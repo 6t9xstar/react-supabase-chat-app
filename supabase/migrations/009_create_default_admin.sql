@@ -52,3 +52,15 @@ BEGIN
     ON CONFLICT (id) DO UPDATE SET role = 'admin', is_active = true;
   END IF;
 END $$;
+
+-- Backfill: ensure every auth user has a profile row
+INSERT INTO public.profiles (id, email, full_name, role, is_active)
+SELECT
+  u.id,
+  u.email,
+  COALESCE(u.raw_user_meta_data->>'full_name', split_part(u.email, '@', 1)),
+  CASE WHEN u.email = 'admin@apexchat.com' THEN 'admin' ELSE 'employee' END,
+  true
+FROM auth.users u
+WHERE NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = u.id)
+ON CONFLICT (id) DO NOTHING;

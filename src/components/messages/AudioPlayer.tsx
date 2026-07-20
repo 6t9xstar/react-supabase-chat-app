@@ -30,7 +30,7 @@ export default function AudioPlayer({ src, name }: AudioPlayerProps) {
   }
 
   return (
-    <div class="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+    <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
       <audio
         ref={audioRef}
         src={src}
@@ -41,19 +41,19 @@ export default function AudioPlayer({ src, name }: AudioPlayerProps) {
       />
       <button
         onClick={togglePlay}
-        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white hover:bg-brand-400"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white hover:bg-brand-400"
       >
-        {playing ? <Pause class="h-4 w-4" /> : <Play class="h-4 w-4 ml-0.5" />}
+        {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
       </button>
-      <div class="flex-1 min-w-0">
-        <p class="truncate text-sm font-medium text-gray-900">{name}</p>
-        <div class="mt-1 h-1.5 w-full rounded-full bg-gray-200">
+      <div className="flex-1 min-w-0">
+        <p className="truncate text-sm font-medium text-gray-900">{name}</p>
+        <div className="mt-1 h-1.5 w-full rounded-full bg-gray-200">
           <div
-            class="h-full rounded-full bg-brand-500 transition-all"
+            className="h-full rounded-full bg-brand-500 transition-all"
             style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
           />
         </div>
-        <div class="mt-0.5 flex justify-between text-xs text-gray-400">
+        <div className="mt-0.5 flex justify-between text-xs text-gray-400">
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>

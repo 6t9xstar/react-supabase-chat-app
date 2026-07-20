@@ -5,14 +5,14 @@ interface VideoPlayerProps {
 
 export default function VideoPlayer({ src, name }: VideoPlayerProps) {
   return (
-    <div class="max-w-md overflow-hidden rounded-lg">
+    <div className="max-w-md overflow-hidden rounded-lg">
       <video
         src={src}
         controls
-        class="w-full"
+        className="w-full"
         preload="metadata"
       >
-        <p class="text-sm text-gray-500">Your browser does not support video playback.</p>
+        <p className="text-sm text-gray-500">Your browser does not support video playback.</p>
       </video>
     </div>
   )

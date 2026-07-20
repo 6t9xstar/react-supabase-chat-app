@@ -22,21 +22,21 @@ export default function FileCard({ name, size, extension, url, onDownload }: Fil
   const icon = extensionIcons[extension] ?? '📎'
 
   return (
-    <div class="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-      <span class="text-2xl">{icon}</span>
-      <div class="flex-1 min-w-0">
-        <p class="truncate text-sm font-medium text-gray-900">{name}</p>
-        <p class="text-xs text-gray-500">{formatFileSize(size)}</p>
+    <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <span className="text-2xl">{icon}</span>
+      <div className="flex-1 min-w-0">
+        <p className="truncate text-sm font-medium text-gray-900">{name}</p>
+        <p className="text-xs text-gray-500">{formatFileSize(size)}</p>
       </div>
       {url && (
         <a
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 hover:text-gray-600"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 hover:text-gray-600"
           title="Download"
         >
-          <Download class="h-4 w-4" />
+          <Download className="h-4 w-4" />
         </a>
       )}
     </div>

@@ -36,13 +36,13 @@ export default function App() {
   }, [])
 
   if (loading) {
-    return <div class="flex h-screen items-center justify-center bg-gray-50"><Spinner size="lg" /></div>
+    return <div className="flex h-screen items-center justify-center bg-gray-50"><Spinner size="lg" /></div>
   }
 
   return (
-    <div class="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden">
       {/* Sidebar: always visible on desktop, hidden on mobile when conversation active */}
-      <div class={`${activeConversationId ? 'hidden md:flex' : 'flex'} w-80 shrink-0`}>
+      <div className={`${activeConversationId ? 'hidden md:flex' : 'flex'} w-80 shrink-0`}>
         <Sidebar
           user={user}
           activeConversationId={activeConversationId}
@@ -51,7 +51,7 @@ export default function App() {
         />
       </div>
       {/* Main: full width on mobile when conversation active */}
-      <main class={`flex-1 flex flex-col ${!activeConversationId ? 'hidden md:flex' : 'flex'}`}>
+      <main className={`flex-1 flex flex-col ${!activeConversationId ? 'hidden md:flex' : 'flex'}`}>
         {activeConversationId && user ? (
           <ChatWindow
             conversationId={activeConversationId}

@@ -106,6 +106,37 @@ CREATE TABLE IF NOT EXISTS message_reads (
   PRIMARY KEY (message_id, user_id)
 );
 
+-- Helper: security definer functions to avoid RLS recursion
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = ''
+STABLE
+AS $$
+  SELECT EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin');
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_user_role()
+RETURNS text
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = ''
+STABLE
+AS $$
+  SELECT role FROM public.profiles WHERE id = auth.uid();
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_conversation_member(conv_id uuid)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = ''
+STABLE
+AS $$
+  SELECT EXISTS (SELECT 1 FROM public.conversation_members WHERE conversation_id = conv_id AND user_id = auth.uid());
+$$;
+
 -- 006: create_rls_policies
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
@@ -121,69 +152,46 @@ CREATE POLICY "profiles_select" ON profiles FOR SELECT TO authenticated
 DROP POLICY IF EXISTS "profiles_update_own" ON profiles;
 CREATE POLICY "profiles_update_own" ON profiles FOR UPDATE TO authenticated
   USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id AND role = (SELECT role FROM profiles WHERE id = auth.uid()));
+  WITH CHECK (auth.uid() = id AND public.get_user_role() = (SELECT role FROM profiles WHERE id = auth.uid()));
 
 DROP POLICY IF EXISTS "profiles_admin_update" ON profiles;
 CREATE POLICY "profiles_admin_update" ON profiles FOR UPDATE TO authenticated
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
 DROP POLICY IF EXISTS "conversations_select" ON conversations;
 CREATE POLICY "conversations_select" ON conversations FOR SELECT TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM conversation_members
-      WHERE conversation_id = conversations.id AND user_id = auth.uid()
-    )
-  );
+  USING (public.is_conversation_member(id));
 
 DROP POLICY IF EXISTS "conversations_insert" ON conversations;
 CREATE POLICY "conversations_insert" ON conversations FOR INSERT TO authenticated
-  WITH CHECK (
-    type = 'direct'
-    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-  );
+  WITH CHECK (type = 'direct' OR public.is_admin());
 
 DROP POLICY IF EXISTS "conversations_update_admin" ON conversations;
 CREATE POLICY "conversations_update_admin" ON conversations FOR UPDATE TO authenticated
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
 DROP POLICY IF EXISTS "cm_select" ON conversation_members;
 CREATE POLICY "cm_select" ON conversation_members FOR SELECT TO authenticated
   USING (
     user_id = auth.uid()
-    OR EXISTS (
-      SELECT 1 FROM conversation_members cm2
-      WHERE cm2.conversation_id = conversation_members.conversation_id
-      AND cm2.user_id = auth.uid()
-    )
+    OR public.is_conversation_member(conversation_id)
   );
 
 DROP POLICY IF EXISTS "cm_insert_admin" ON conversation_members;
 CREATE POLICY "cm_insert_admin" ON conversation_members FOR INSERT TO authenticated
-  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+  WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "cm_delete_admin" ON conversation_members;
 CREATE POLICY "cm_delete_admin" ON conversation_members FOR DELETE TO authenticated
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
 DROP POLICY IF EXISTS "messages_select" ON messages;
 CREATE POLICY "messages_select" ON messages FOR SELECT TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM conversation_members
-      WHERE conversation_id = messages.conversation_id AND user_id = auth.uid()
-    )
-  );
+  USING (public.is_conversation_member(conversation_id));
 
 DROP POLICY IF EXISTS "messages_insert" ON messages;
 CREATE POLICY "messages_insert" ON messages FOR INSERT TO authenticated
-  WITH CHECK (
-    sender_id = auth.uid()
-    AND EXISTS (
-      SELECT 1 FROM conversation_members
-      WHERE conversation_id = messages.conversation_id AND user_id = auth.uid()
-    )
-  );
+  WITH CHECK (sender_id = auth.uid() AND public.is_conversation_member(conversation_id));
 
 DROP POLICY IF EXISTS "messages_update" ON messages;
 CREATE POLICY "messages_update" ON messages FOR UPDATE TO authenticated
@@ -192,12 +200,7 @@ CREATE POLICY "messages_update" ON messages FOR UPDATE TO authenticated
 
 DROP POLICY IF EXISTS "attachments_select" ON attachments;
 CREATE POLICY "attachments_select" ON attachments FOR SELECT TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM conversation_members
-      WHERE conversation_id = attachments.conversation_id AND user_id = auth.uid()
-    )
-  );
+  USING (public.is_conversation_member(conversation_id));
 
 DROP POLICY IF EXISTS "attachments_insert" ON attachments;
 CREATE POLICY "attachments_insert" ON attachments FOR INSERT TO authenticated
@@ -288,3 +291,15 @@ BEGIN
     ON CONFLICT (id) DO UPDATE SET role = 'admin', is_active = true;
   END IF;
 END $$;
+
+-- Backfill: ensure every auth user has a profile row
+INSERT INTO public.profiles (id, email, full_name, role, is_active)
+SELECT
+  u.id,
+  u.email,
+  COALESCE(u.raw_user_meta_data->>'full_name', split_part(u.email, '@', 1)),
+  CASE WHEN u.email = 'admin@apexchat.com' THEN 'admin' ELSE 'employee' END,
+  true
+FROM auth.users u
+WHERE NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = u.id)
+ON CONFLICT (id) DO NOTHING;

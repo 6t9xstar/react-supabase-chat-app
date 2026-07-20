@@ -40,9 +40,9 @@ export default function ChatHeader({ conversationId, currentUserId, onlineUserId
 
   if (!conv) {
     return (
-      <div class="flex items-center gap-3 border-b border-gray-200 bg-white px-6 py-3">
-        <div class="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
-        <div class="h-4 w-40 animate-pulse rounded bg-gray-200" />
+      <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-6 py-3">
+        <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
+        <div className="h-4 w-40 animate-pulse rounded bg-gray-200" />
       </div>
     )
   }
@@ -56,16 +56,16 @@ export default function ChatHeader({ conversationId, currentUserId, onlineUserId
     : (onlineUserIds?.length ?? 0)
 
   return (
-    <div class="flex items-center gap-3 border-b border-gray-200 bg-white px-6 py-3">
+    <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-6 py-3">
       {onBack && (
-        <button onClick={onBack} class="md:hidden rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
-          <ArrowLeft class="h-5 w-5" />
+        <button onClick={onBack} className="md:hidden rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+          <ArrowLeft className="h-5 w-5" />
         </button>
       )}
       <Avatar name={displayName} size="md" />
-      <div class="flex-1">
-        <p class="text-sm font-semibold text-gray-900">{displayName}</p>
-        <p class="text-xs text-gray-500">
+      <div className="flex-1">
+        <p className="text-sm font-semibold text-gray-900">{displayName}</p>
+        <p className="text-xs text-gray-500">
           {conv.type === 'group'
             ? `${members.length} members${onlineCount > 0 ? ` · ${onlineCount} online` : ''}`
             : onlineCount > 0 ? 'Online' : 'Offline'}
@@ -74,10 +74,10 @@ export default function ChatHeader({ conversationId, currentUserId, onlineUserId
       {conv.type === 'group' && isAdmin && onGroupSettings && (
         <button
           onClick={onGroupSettings}
-          class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-500"
+          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-500"
           title="Group Settings"
         >
-          <Settings class="h-4 w-4" />
+          <Settings className="h-4 w-4" />
         </button>
       )}
     </div>

@@ -2,6 +2,7 @@ export type Role = 'admin' | 'employee'
 
 export interface Profile {
   id: string
+  email: string | null
   full_name: string
   avatar_url: string | null
   role: Role

@@ -136,21 +136,21 @@ export default function MessageComposer({
   const isLoading = uploading || sending
 
   return (
-    <div class="border-t border-gray-200 bg-white">
+    <div className="border-t border-gray-200 bg-white">
       {replyTo && <ReplyPreview message={replyTo} onCancel={onCancelReply} />}
 
-      <input ref={fileInputRef} type="file" multiple class="hidden" onChange={handleFileSelect} />
+      <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
 
       {uploads.length > 0 && (
-        <div class="flex flex-wrap gap-2 border-t border-gray-100 px-6 py-2">
+        <div className="flex flex-wrap gap-2 border-t border-gray-100 px-6 py-2">
           {uploads.map((item) => (
-            <div key={item.id} class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs">
-              <span class="max-w-[100px] truncate text-gray-700">{item.file.name}</span>
-              {item.status === 'uploading' && <Loader2 class="h-3 w-3 animate-spin text-brand-500" />}
-              {item.status === 'error' && <span class="text-red-500">Failed</span>}
+            <div key={item.id} className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs">
+              <span className="max-w-[100px] truncate text-gray-700">{item.file.name}</span>
+              {item.status === 'uploading' && <Loader2 className="h-3 w-3 animate-spin text-brand-500" />}
+              {item.status === 'error' && <span className="text-red-500">Failed</span>}
               {item.status === 'pending' && (
-                <button onClick={() => setUploads((prev) => prev.filter((u) => u.id !== item.id))} class="text-gray-400 hover:text-red-500">
-                  <X class="h-3 w-3" />
+                <button onClick={() => setUploads((prev) => prev.filter((u) => u.id !== item.id))} className="text-gray-400 hover:text-red-500">
+                  <X className="h-3 w-3" />
                 </button>
               )}
             </div>
@@ -158,15 +158,15 @@ export default function MessageComposer({
         </div>
       )}
 
-      <div class="flex items-end gap-3 px-6 py-4" onDragOver={(e) => e.preventDefault()} onDrop={handleDrop}>
+      <div className="flex items-end gap-3 px-6 py-4" onDragOver={(e) => e.preventDefault()} onDrop={handleDrop}>
         <button
           onClick={() => fileInputRef.current?.click()}
-          class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
           title="Attach file"
         >
-          <Paperclip class="h-5 w-5" />
+          <Paperclip className="h-5 w-5" />
         </button>
-        <div class="flex-1">
+        <div className="flex-1">
           <textarea
             ref={textareaRef}
             value={text}
@@ -175,16 +175,16 @@ export default function MessageComposer({
             onPaste={handlePaste}
             placeholder="Type a message... (Enter to send, Shift+Enter for new line)"
             rows={1}
-            class="block w-full resize-none rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+            className="block w-full resize-none rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
           />
         </div>
         <button
           onClick={handleSend}
           disabled={(!text.trim() && uploads.length === 0) || isLoading}
-          class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-500 text-white transition hover:bg-brand-400 disabled:opacity-50"
+          className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-500 text-white transition hover:bg-brand-400 disabled:opacity-50"
           title="Send"
         >
-          {isLoading ? <Loader2 class="h-4 w-4 animate-spin" /> : <Send class="h-4 w-4" />}
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </button>
       </div>
     </div>

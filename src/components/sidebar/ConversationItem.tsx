@@ -22,7 +22,7 @@ export default function ConversationItem({ conversation, isActive, onSelect }: C
   return (
     <button
       onClick={() => onSelect(conversation.id)}
-      class={`flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-gray-50 ${
+      className={`flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-gray-50 ${
         isActive ? 'bg-brand-50' : ''
       }`}
     >
@@ -30,19 +30,19 @@ export default function ConversationItem({ conversation, isActive, onSelect }: C
         name={displayName}
         size="md"
       />
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center justify-between">
-          <p class="truncate text-sm font-medium text-gray-900">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between">
+          <p className="truncate text-sm font-medium text-gray-900">
             {displayName}
           </p>
           {lastMsg && (
-            <span class="shrink-0 text-xs text-gray-400">
+            <span className="shrink-0 text-xs text-gray-400">
               {formatDistanceToNow(lastMsg.created_at)}
             </span>
           )}
         </div>
-        <div class="flex items-center justify-between">
-          <p class="truncate text-xs text-gray-500">
+        <div className="flex items-center justify-between">
+          <p className="truncate text-xs text-gray-500">
             {preview}
           </p>
           <Badge count={conversation.unread_count ?? 0} />

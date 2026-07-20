@@ -37,19 +37,19 @@ export default function MessageList({ messages, loading, hasMore, currentUserId,
   }, [loading, hasMore, onLoadMore])
 
   if (loading && messages.length === 0) {
-    return <div class="flex flex-1 items-center justify-center"><Loader2 class="h-6 w-6 animate-spin text-brand-500" /></div>
+    return <div className="flex flex-1 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-brand-500" /></div>
   }
 
   if (messages.length === 0) {
-    return <div class="flex flex-1 items-center justify-center text-sm text-gray-400">No messages yet. Start the conversation!</div>
+    return <div className="flex flex-1 items-center justify-center text-sm text-gray-400">No messages yet. Start the conversation!</div>
   }
 
   return (
-    <div ref={containerRef} onScroll={handleScroll} class="flex-1 overflow-y-auto px-6 py-4 scrollbar-thin">
+    <div ref={containerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-6 py-4 scrollbar-thin">
       {loading && hasMore && (
-        <div class="flex justify-center py-2"><Loader2 class="h-4 w-4 animate-spin text-gray-400" /></div>
+        <div className="flex justify-center py-2"><Loader2 className="h-4 w-4 animate-spin text-gray-400" /></div>
       )}
-      <div class="space-y-1">
+      <div className="space-y-1">
         {messages.map((msg) => (
           <MessageItem key={msg.id} message={msg} isOwn={msg.sender_id === currentUserId} onReply={onReply} />
         ))}

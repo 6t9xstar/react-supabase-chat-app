@@ -24,35 +24,35 @@ export default function SearchBar({ userId, value, onChange, onSelectResult }: S
   }, [])
 
   return (
-    <div ref={ref} class="px-4 py-3 relative">
-      <div class="relative">
-        <Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+    <div ref={ref} className="px-4 py-3 relative">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           placeholder="Search conversations..."
-          class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+          className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
         />
-        {loading && <Loader2 class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-gray-400" />}
+        {loading && <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-gray-400" />}
       </div>
 
       {focused && value.trim() && (
-        <div class="absolute left-4 right-4 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+        <div className="absolute left-4 right-4 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
           {results.length === 0 && !loading && (
-            <p class="px-4 py-3 text-sm text-gray-500">No messages found</p>
+            <p className="px-4 py-3 text-sm text-gray-500">No messages found</p>
           )}
           {results.map((r, i) => (
             <button
               key={`${r.conversation_id}-${i}`}
               onClick={() => { onSelectResult?.(r.conversation_id); setFocused(false); onChange('') }}
-              class="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-gray-50"
+              className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-gray-50"
             >
-              <MessageSquare class="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
-              <div class="min-w-0 flex-1">
-                <p class="truncate text-sm text-gray-900">{r.content}</p>
-                <p class="text-xs text-gray-500">{formatDistanceToNow(r.created_at)}</p>
+              <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm text-gray-900">{r.content}</p>
+                <p className="text-xs text-gray-500">{formatDistanceToNow(r.created_at)}</p>
               </div>
             </button>
           ))}

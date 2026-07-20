@@ -17,21 +17,21 @@ export default function Avatar({ src, name, size = 'md', online }: AvatarProps) 
     .slice(0, 2)
 
   return (
-    <div class={`relative inline-flex shrink-0 ${sizeMap[size]}`}>
+    <div className={`relative inline-flex shrink-0 ${sizeMap[size]}`}>
       {src ? (
         <img
           src={src}
           alt={name}
-          class="rounded-full object-cover"
+          className="rounded-full object-cover"
         />
       ) : (
-        <div class="flex h-full w-full items-center justify-center rounded-full bg-brand-500 font-medium text-white">
+        <div className="flex h-full w-full items-center justify-center rounded-full bg-brand-500 font-medium text-white">
           {initials}
         </div>
       )}
       {online !== undefined && (
         <span
-          class={`absolute bottom-0 right-0 rounded-full border-2 border-white ${
+          className={`absolute bottom-0 right-0 rounded-full border-2 border-white ${
             online ? 'bg-green-500' : 'bg-gray-400'
           } ${dotMap[size]}`}
         />

@@ -1,3 +1,34 @@
+-- Helper functions to avoid RLS recursion
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = ''
+STABLE
+AS $$
+  SELECT EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin');
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_user_role()
+RETURNS text
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = ''
+STABLE
+AS $$
+  SELECT role FROM public.profiles WHERE id = auth.uid();
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_conversation_member(conv_id uuid)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = ''
+STABLE
+AS $$
+  SELECT EXISTS (SELECT 1 FROM public.conversation_members WHERE conversation_id = conv_id AND user_id = auth.uid());
+$$;
+
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversation_members ENABLE ROW LEVEL SECURITY;
@@ -10,72 +41,41 @@ CREATE POLICY "profiles_select" ON profiles FOR SELECT TO authenticated
 
 CREATE POLICY "profiles_update_own" ON profiles FOR UPDATE TO authenticated
   USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id AND role = (SELECT role FROM profiles WHERE id = auth.uid()));
+  WITH CHECK (auth.uid() = id AND public.get_user_role() = (SELECT role FROM profiles WHERE id = auth.uid()));
 
 CREATE POLICY "profiles_admin_update" ON profiles FOR UPDATE TO authenticated
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
 CREATE POLICY "conversations_select" ON conversations FOR SELECT TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM conversation_members
-      WHERE conversation_id = conversations.id AND user_id = auth.uid()
-    )
-  );
+  USING (public.is_conversation_member(id));
 
 CREATE POLICY "conversations_insert" ON conversations FOR INSERT TO authenticated
-  WITH CHECK (
-    type = 'direct'
-    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-  );
+  WITH CHECK (type = 'direct' OR public.is_admin());
 
 CREATE POLICY "conversations_update_admin" ON conversations FOR UPDATE TO authenticated
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
 CREATE POLICY "cm_select" ON conversation_members FOR SELECT TO authenticated
-  USING (
-    user_id = auth.uid()
-    OR EXISTS (
-      SELECT 1 FROM conversation_members cm2
-      WHERE cm2.conversation_id = conversation_members.conversation_id
-      AND cm2.user_id = auth.uid()
-    )
-  );
+  USING (user_id = auth.uid() OR public.is_conversation_member(conversation_id));
 
 CREATE POLICY "cm_insert_admin" ON conversation_members FOR INSERT TO authenticated
-  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+  WITH CHECK (public.is_admin());
 
 CREATE POLICY "cm_delete_admin" ON conversation_members FOR DELETE TO authenticated
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
 CREATE POLICY "messages_select" ON messages FOR SELECT TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM conversation_members
-      WHERE conversation_id = messages.conversation_id AND user_id = auth.uid()
-    )
-  );
+  USING (public.is_conversation_member(conversation_id));
 
 CREATE POLICY "messages_insert" ON messages FOR INSERT TO authenticated
-  WITH CHECK (
-    sender_id = auth.uid()
-    AND EXISTS (
-      SELECT 1 FROM conversation_members
-      WHERE conversation_id = messages.conversation_id AND user_id = auth.uid()
-    )
-  );
+  WITH CHECK (sender_id = auth.uid() AND public.is_conversation_member(conversation_id));
 
 CREATE POLICY "messages_update" ON messages FOR UPDATE TO authenticated
   USING (sender_id = auth.uid() AND deleted_at IS NULL)
   WITH CHECK (sender_id = auth.uid() AND deleted_at IS NULL);
 
 CREATE POLICY "attachments_select" ON attachments FOR SELECT TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM conversation_members
-      WHERE conversation_id = attachments.conversation_id AND user_id = auth.uid()
-    )
-  );
+  USING (public.is_conversation_member(conversation_id));
 
 CREATE POLICY "attachments_insert" ON attachments FOR INSERT TO authenticated
   WITH CHECK (sender_id = auth.uid());

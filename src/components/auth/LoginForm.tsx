@@ -42,33 +42,33 @@ export default function LoginForm() {
   }
 
   return (
-    <div class="w-full max-w-md px-6">
-      <div class="mb-8 text-center">
-        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm">
-          <MessageCircle class="h-8 w-8 text-white" />
+    <div className="w-full max-w-md px-6">
+      <div className="mb-8 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm">
+          <MessageCircle className="h-8 w-8 text-white" />
         </div>
-        <h1 class="text-2xl font-bold text-white">Apex Chat</h1>
-        <p class="mt-1 text-sm text-brand-200">Internal Team Communication</p>
+        <h1 className="text-2xl font-bold text-white">Apex Chat</h1>
+        <p className="mt-1 text-sm text-brand-200">Internal Team Communication</p>
       </div>
 
-      <div class="rounded-2xl bg-white/10 p-8 backdrop-blur-sm">
+      <div className="rounded-2xl bg-white/10 p-8 backdrop-blur-sm">
         {resetSent ? (
-          <div class="text-center">
-            <div class="mb-4 text-3xl">📧</div>
-            <p class="text-sm text-brand-100">
+          <div className="text-center">
+            <div className="mb-4 text-3xl">📧</div>
+            <p className="text-sm text-brand-100">
               Check your email for a password reset link.
             </p>
             <button
               onClick={() => setResetSent(false)}
-              class="mt-4 text-sm font-medium text-brand-300 hover:text-brand-200"
+              className="mt-4 text-sm font-medium text-brand-300 hover:text-brand-200"
             >
               Back to login
             </button>
           </div>
         ) : (
-          <form onSubmit={handleLogin} class="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label htmlFor="email" class="block text-sm font-medium text-brand-100">
+              <label htmlFor="email" className="block text-sm font-medium text-brand-100">
                 Company Email
               </label>
               <input
@@ -78,16 +78,16 @@ export default function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@apexaccuracyestimatinginc.com"
-                class="mt-1 block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-brand-300/50 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+                className="mt-1 block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-brand-300/50 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
                 autoComplete="email"
               />
             </div>
 
             <div>
-              <label htmlFor="password" class="block text-sm font-medium text-brand-100">
+              <label htmlFor="password" className="block text-sm font-medium text-brand-100">
                 Password
               </label>
-              <div class="relative mt-1">
+              <div className="relative mt-1">
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -95,22 +95,22 @@ export default function LoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  class="block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 pr-10 text-sm text-white placeholder-brand-300/50 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+                  className="block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 pr-10 text-sm text-white placeholder-brand-300/50 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
                   autoComplete="current-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  class="absolute right-2.5 top-1/2 -translate-y-1/2 text-brand-300 hover:text-brand-100"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-brand-300 hover:text-brand-100"
                   tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff class="h-4 w-4" /> : <Eye class="h-4 w-4" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
 
             {error && (
-              <p class="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
+              <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
                 {error}
               </p>
             )}
@@ -118,17 +118,17 @@ export default function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              class="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-400 disabled:opacity-50"
+              className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-400 disabled:opacity-50"
             >
-              {loading ? <Loader2 class="h-4 w-4 animate-spin" /> : 'Sign in'}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign in'}
             </button>
 
-            <div class="text-center">
+            <div className="text-center">
               <button
                 type="button"
                 onClick={handleReset}
                 disabled={loading}
-                class="text-sm text-brand-300 hover:text-brand-200 disabled:opacity-50"
+                className="text-sm text-brand-300 hover:text-brand-200 disabled:opacity-50"
               >
                 Forgot password?
               </button>

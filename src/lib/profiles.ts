@@ -13,9 +13,9 @@ export async function getProfile(id: string): Promise<Profile | null> {
 export async function searchProfiles(query: string): Promise<Profile[]> {
   const { data } = await supabase
     .from('profiles')
-    .select('id, full_name, avatar_url, role')
+    .select('id, email, full_name, avatar_url, role')
     .neq('id', (await supabase.auth.getUser()).data.user?.id)
-    .ilike('full_name', `%${query}%`)
+    .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
     .limit(20)
   return data ?? []
 }
@@ -28,6 +28,7 @@ export async function getAllActiveProfiles(): Promise<Profile[]> {
     .order('full_name')
   return data ?? []
 }
+
 
 export async function updateProfile(id: string, updates: Partial<Pick<Profile, 'full_name' | 'avatar_url' | 'role' | 'is_active'>>) {
   const { data, error } = await supabase

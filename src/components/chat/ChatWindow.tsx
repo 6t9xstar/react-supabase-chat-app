@@ -28,7 +28,7 @@ export default function ChatWindow({ conversationId, user, isAdmin, onGroupSetti
   }, [conversationId, user.id])
 
   return (
-    <div class="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col">
       <ChatHeader
         conversationId={conversationId}
         currentUserId={user.id}
@@ -39,7 +39,7 @@ export default function ChatWindow({ conversationId, user, isAdmin, onGroupSetti
       />
 
       {typingUserIds.length > 0 && (
-        <div class="bg-gray-50 px-6 py-1 text-xs text-gray-400 italic">Someone is typing...</div>
+        <div className="bg-gray-50 px-6 py-1 text-xs text-gray-400 italic">Someone is typing...</div>
       )}
 
       <MessageList
