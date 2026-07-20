@@ -59,6 +59,7 @@ Open the **Supabase Dashboard SQL Editor** (`https://supabase.com/dashboard/proj
 | 6 | `supabase/migrations/006_create_rls_policies.sql` | Row Level Security (15 policies) |
 | 7 | `supabase/migrations/007_create_indexes.sql` | Performance indexes |
 | 8 | `supabase/migrations/008_create_storage_bucket.sql` | Storage bucket + RLS |
+| 9 | `supabase/migrations/009_create_default_admin.sql` | Default admin account |
 
 After migrations, go to **Database → Replication → supabase_realtime** and toggle `messages` on.
 
@@ -69,7 +70,18 @@ After migrations, go to **Database → Replication → supabase_realtime** and t
 ALTER PUBLICATION supabase_realtime ADD TABLE messages;
 ```
 
-### 5. Create admin user
+### 5. Default admin account
+
+Migration `009_create_default_admin.sql` creates a default admin:
+
+| Field | Value |
+|-------|-------|
+| Email | `admin@apexchat.com` |
+| Password | `admin123` |
+
+The account is created only if it doesn't already exist. **Change the password after first login.**
+
+### 6. Create additional users (optional)
 
 1. Go to **Authentication → Users → Add User** in Supabase Dashboard
 2. Create the first employee account
