@@ -49,46 +49,21 @@ export async function getConversations(userId: string): Promise<ConversationWith
 
   if (!conversations) return []
 
+  const [lastMsgMap, otherUserMap] = await Promise.all([
+    getLastMessagesMap(ids),
+    getOtherUsersMap(ids, userId),
+  ])
+
   const results: ConversationWithMeta[] = []
-
   for (const conv of conversations) {
-    const { data: lastMessage } = await supabase
-      .from('messages')
-      .select('id, content, sender_id, created_at, deleted_at')
-      .eq('conversation_id', conv.id)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(1)
-
-    const { count: unreadCount } = await supabase
-      .from('messages')
-      .select('id', { count: 'exact', head: true })
-      .eq('conversation_id', conv.id)
-      .gt('created_at', (await getLastReadAt(conv.id, userId)) ?? '1970-01-01')
-
-    let otherUser = null
-    if (conv.type === 'direct') {
-      const { data: members } = await supabase
-        .from('conversation_members')
-        .select('user_id')
-        .eq('conversation_id', conv.id)
-        .neq('user_id', userId)
-        .limit(1)
-
-      if (members?.length) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url')
-          .eq('id', members[0].user_id)
-          .single()
-        otherUser = profile
-      }
-    }
+    const lastMessageData = lastMsgMap.get(conv.id) ?? null
+    const otherUser = conv.type === 'direct' ? otherUserMap.get(conv.id) ?? null : null
+    const unreadCount = lastMessageData?.id ? await getUnreadCount(conv.id, userId) : 0
 
     results.push({
       ...conv,
-      last_message: lastMessage?.[0] ?? null,
-      unread_count: unreadCount ?? 0,
+      last_message: lastMessageData,
+      unread_count: unreadCount,
       other_user: otherUser,
     })
   }
@@ -96,12 +71,68 @@ export async function getConversations(userId: string): Promise<ConversationWith
   return results
 }
 
+async function getLastMessagesMap(convIds: string[]): Promise<Map<string, { id: string; content: string | null; sender_id: string; created_at: string; deleted_at: string | null }>> {
+  const map = new Map()
+  const { data } = await supabase
+    .from('messages')
+    .select('id, conversation_id, content, sender_id, created_at, deleted_at')
+    .in('conversation_id', convIds)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+
+  if (data) {
+    const seen = new Set<string>()
+    for (const msg of data) {
+      if (!seen.has(msg.conversation_id)) {
+        seen.add(msg.conversation_id)
+        map.set(msg.conversation_id, msg)
+      }
+    }
+  }
+  return map
+}
+
+async function getOtherUsersMap(convIds: string[], userId: string): Promise<Map<string, { id: string; full_name: string; avatar_url: string | null }>> {
+  const map = new Map()
+  const { data: members } = await supabase
+    .from('conversation_members')
+    .select('conversation_id, user_id')
+    .in('conversation_id', convIds)
+    .neq('user_id', userId)
+
+  if (!members?.length) return map
+
+  const otherUserIds = [...new Set(members.map(m => m.user_id))]
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, full_name, avatar_url')
+    .in('id', otherUserIds)
+
+  if (profiles) {
+    const profileMap = new Map(profiles.map(p => [p.id, p]))
+    for (const m of members) {
+      const profile = profileMap.get(m.user_id)
+      if (profile) map.set(m.conversation_id, profile)
+    }
+  }
+  return map
+}
+
 async function getLastReadAt(conversationId: string, userId: string): Promise<string | null> {
+  const { data: msg } = await supabase
+    .from('messages')
+    .select('id')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (!msg?.length) return null
+
   const { data } = await supabase
     .from('message_reads')
     .select('read_at')
     .eq('user_id', userId)
-    .order('read_at', { ascending: false })
+    .eq('message_id', msg[0].id)
     .limit(1)
 
   return data?.[0]?.read_at ?? null

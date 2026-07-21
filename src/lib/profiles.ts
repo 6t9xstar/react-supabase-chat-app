@@ -10,13 +10,16 @@ export async function getProfile(id: string): Promise<Profile | null> {
   return data
 }
 
-export async function searchProfiles(query: string): Promise<Profile[]> {
-  const { data } = await supabase
+export async function searchProfiles(query: string, excludeUserId?: string): Promise<Profile[]> {
+  let q = supabase
     .from('profiles')
     .select('id, email, full_name, avatar_url, role')
-    .neq('id', (await supabase.auth.getUser()).data.user?.id)
     .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
     .limit(20)
+
+  if (excludeUserId) q = q.neq('id', excludeUserId)
+
+  const { data } = await q
   return data ?? []
 }
 

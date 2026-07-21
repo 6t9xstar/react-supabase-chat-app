@@ -19,7 +19,7 @@ export default function NewChatModal({ open, onClose, userId, onConversationCrea
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
-  const { profiles, search: searchProfiles } = useProfiles()
+  const { profiles, search: searchProfiles } = useProfiles(userId)
 
   const handleSearch = (val: string) => {
     setSearch(val)

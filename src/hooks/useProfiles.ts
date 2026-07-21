@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getAllActiveProfiles, searchProfiles } from '../lib/profiles'
 import type { Profile } from '../types/database'
 
-export function useProfiles() {
+export function useProfiles(excludeUserId?: string) {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -10,7 +10,7 @@ export function useProfiles() {
     getAllActiveProfiles().then((data) => {
       setProfiles(data)
       setLoading(false)
-    })
+    }).catch(() => setLoading(false))
   }, [])
 
   const search = async (query: string) => {
@@ -19,7 +19,7 @@ export function useProfiles() {
       setProfiles(data)
       return
     }
-    const data = await searchProfiles(query)
+    const data = await searchProfiles(query, excludeUserId)
     setProfiles(data)
   }
 

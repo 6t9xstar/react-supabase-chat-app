@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { addMember, removeMember, renameGroup, getConversationMembers } from '../../lib/conversations'
 import { useProfiles } from '../../hooks/useProfiles'
 import Modal from '../ui/Modal'
@@ -19,16 +19,17 @@ export default function GroupSettingsModal({ open, onClose, conversationId, curr
   const [saving, setSaving] = useState(false)
   const [memberIds, setMemberIds] = useState<string[]>([])
   const [search, setSearch] = useState('')
-  const { profiles, search: searchProfiles } = useProfiles()
+  const { profiles, search: searchProfiles } = useProfiles(userId)
 
   // Load current members
-  useState(() => {
+  useEffect(() => {
     if (open && conversationId) {
+      setName(currentName)
       getConversationMembers(conversationId).then((members) => {
         setMemberIds(members.map((m: any) => m.user_id))
       })
     }
-  })
+  }, [open, conversationId, currentName])
 
   const handleRename = async () => {
     if (!name.trim() || name === currentName) return

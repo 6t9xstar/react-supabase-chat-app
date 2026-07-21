@@ -30,7 +30,7 @@ export async function searchMessages(userId: string, query: string): Promise<{ c
 
 export async function getMessages(
   conversationId: string,
-  cursor?: string,
+  cursor?: { created_at: string; id: string },
   limit: number = PAGE_SIZE
 ): Promise<{ messages: Message[]; hasMore: boolean }> {
   let query = supabase
@@ -38,10 +38,11 @@ export async function getMessages(
     .select('*, sender:profiles!sender_id(id, full_name, avatar_url), reply_to:messages!reply_to_id(id, content, sender_id)')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .limit(limit + 1)
 
   if (cursor) {
-    query = query.lt('created_at', cursor)
+    query = query.or(`created_at.lt.${cursor.created_at},and(created_at.eq.${cursor.created_at},id.lt.${cursor.id})`)
   }
 
   const { data } = await query
@@ -89,11 +90,21 @@ export async function deleteMessage(messageId: string): Promise<void> {
 }
 
 export async function getUnreadCount(conversationId: string, userId: string): Promise<number> {
+  const { data: convMessages } = await supabase
+    .from('messages')
+    .select('id')
+    .eq('conversation_id', conversationId)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (!convMessages?.length) return 0
+
   const { data: lastRead } = await supabase
     .from('message_reads')
     .select('read_at')
     .eq('user_id', userId)
-    .order('read_at', { ascending: false })
+    .eq('message_id', convMessages[0].id)
     .limit(1)
 
   const cursor = lastRead?.[0]?.read_at ?? '1970-01-01T00:00:00Z'
