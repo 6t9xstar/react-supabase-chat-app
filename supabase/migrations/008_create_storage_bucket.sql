@@ -1,18 +1,17 @@
 -- Create storage bucket + RLS policies for file attachments
--- Run this in Supabase SQL Editor or include in migrations
 
 -- Insert into storage.buckets
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('attachments', 'attachments', false)
 ON CONFLICT (id) DO NOTHING;
 
--- Allow authenticated users to upload files
+DROP POLICY IF EXISTS "authenticated_upload" ON storage.objects;
 CREATE POLICY "authenticated_upload"
 ON storage.objects FOR INSERT
 TO authenticated
 WITH CHECK (bucket_id = 'attachments');
 
--- Allow members of conversation to read files
+DROP POLICY IF EXISTS "member_read" ON storage.objects;
 CREATE POLICY "member_read"
 ON storage.objects FOR SELECT
 TO authenticated
@@ -25,7 +24,7 @@ USING (
   )
 );
 
--- Allow sender to delete own files
+DROP POLICY IF EXISTS "owner_delete" ON storage.objects;
 CREATE POLICY "owner_delete"
 ON storage.objects FOR DELETE
 TO authenticated

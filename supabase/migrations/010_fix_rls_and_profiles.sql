@@ -56,9 +56,13 @@ $$;
 CREATE POLICY "profiles_select" ON profiles FOR SELECT TO authenticated
   USING (is_active = true OR auth.uid() = id);
 
+DROP POLICY IF EXISTS "profiles_insert" ON profiles;
+CREATE POLICY "profiles_insert" ON profiles FOR INSERT TO authenticated
+  WITH CHECK (id = auth.uid());
+
 CREATE POLICY "profiles_update_own" ON profiles FOR UPDATE TO authenticated
   USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id AND public.get_user_role() = (SELECT role FROM profiles WHERE id = auth.uid()));
+  WITH CHECK (auth.uid() = id AND role = (SELECT p.role FROM public.profiles p WHERE p.id = auth.uid()));
 
 CREATE POLICY "profiles_admin_update" ON profiles FOR UPDATE TO authenticated
   USING (public.is_admin());
@@ -98,13 +102,13 @@ CREATE POLICY "messages_insert" ON messages FOR INSERT TO authenticated
 
 CREATE POLICY "messages_update" ON messages FOR UPDATE TO authenticated
   USING (sender_id = auth.uid() AND deleted_at IS NULL)
-  WITH CHECK (sender_id = auth.uid() AND deleted_at IS NULL);
+  WITH CHECK (sender_id = auth.uid());
 
 CREATE POLICY "attachments_select" ON attachments FOR SELECT TO authenticated
   USING (public.is_conversation_member(conversation_id));
 
 CREATE POLICY "attachments_insert" ON attachments FOR INSERT TO authenticated
-  WITH CHECK (sender_id = auth.uid());
+  WITH CHECK (sender_id = auth.uid() AND public.is_conversation_member(conversation_id));
 
 CREATE POLICY "mr_select" ON message_reads FOR SELECT TO authenticated
   USING (user_id = auth.uid());
@@ -116,7 +120,14 @@ CREATE POLICY "authenticated_upload" ON storage.objects FOR INSERT TO authentica
   WITH CHECK (bucket_id = 'attachments');
 
 CREATE POLICY "member_read" ON storage.objects FOR SELECT TO authenticated
-  USING (bucket_id = 'attachments' AND public.is_conversation_member((storage.foldername(name))[1]::uuid));
+  USING (
+    bucket_id = 'attachments'
+    AND EXISTS (
+      SELECT 1 FROM conversation_members
+      WHERE conversation_id::text = (storage.foldername(name))[1]
+      AND user_id = auth.uid()
+    )
+  );
 
 CREATE POLICY "owner_delete" ON storage.objects FOR DELETE TO authenticated
   USING (bucket_id = 'attachments' AND (storage.foldername(name))[2] = auth.uid()::text);
