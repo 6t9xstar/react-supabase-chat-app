@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import Avatar from '../ui/Avatar'
 import Badge from '../ui/Badge'
 import { formatDistanceToNow } from '../../lib/formatDate'
-import { Pin, PinOff, Check, Archive } from 'lucide-react'
+import { Pin, Check, Archive } from 'lucide-react'
 import { togglePinnedConversation, isPinned } from '../../lib/pinned'
 import { toggleArchivedConversation, isArchived } from '../../lib/archived'
 import type { ConversationWithMeta } from '../../types/database'
@@ -29,7 +29,6 @@ export default function ConversationItem({ conversation, isActive, onSelect, cur
 
   const lastMsg = conversation.last_message
   const isOwnLastMsg = lastMsg?.sender_id === currentUserId
-  const isUnread = (conversation.unread_count ?? 0) > 0
 
   const previewText = lastMsg?.deleted_at
     ? 'Message deleted'

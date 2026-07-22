@@ -1,4 +1,5 @@
 import { Download, FileText, Image as ImageIcon, Film, Music, FileArchive, FileSpreadsheet, File as FileIcon, FileCode } from 'lucide-react'
+import type { ComponentType } from 'react'
 import { formatFileSize } from '../../lib/formatDate'
 
 interface FileCardProps {
@@ -8,7 +9,9 @@ interface FileCardProps {
   url?: string
 }
 
-const ICON_MAP: Record<string, { Icon: any; className: string }> = {
+type IconType = ComponentType<{ className?: string; strokeWidth?: number }>
+
+const ICON_MAP: Record<string, { Icon: IconType; className: string }> = {
   jpg: { Icon: ImageIcon, className: 'text-ios-blue-light dark:text-ios-blue-dark' },
   jpeg: { Icon: ImageIcon, className: 'text-ios-blue-light dark:text-ios-blue-dark' },
   png: { Icon: ImageIcon, className: 'text-ios-blue-light dark:text-ios-blue-dark' },

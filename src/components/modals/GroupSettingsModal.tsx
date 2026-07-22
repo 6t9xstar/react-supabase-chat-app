@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   addMember,
   removeMember,
@@ -48,31 +48,51 @@ export default function GroupSettingsModal({
   >([])
   const [userRole, setUserRole] = useState<string>('member')
   const [search, setSearch] = useState('')
-  const [initialized, setInitialized] = useState(false)
   const { profiles, search: searchProfiles } = useProfiles(userId)
+  const initializedRef = useRef(false)
 
   const isAdmin = userRole === 'admin'
   const memberIds = members.map((m) => m.user_id)
 
+  // Sync name when modal opens or currentName changes
   useEffect(() => {
-    if (open && !initialized) {
+    if (open && !initializedRef.current) {
       setName(currentName)
-      setInitialized(true)
+      initializedRef.current = true
     }
-    if (!open) setInitialized(false)
-  }, [open, currentName, initialized])
+    if (!open) {
+      initializedRef.current = false
+    }
+  }, [open, currentName])
 
+  // Load members when modal opens
   useEffect(() => {
-    if (open && conversationId) {
-      getConversationMembers(conversationId).then((rows) => {
+    let cancelled = false
+    
+    const loadMembers = async () => {
+      if (!open || !conversationId) {
+        setMembers([])
+        return
+      }
+      
+      try {
+        const rows = await getConversationMembers(conversationId)
+        if (cancelled) return
         setMembers(
           rows.map((m) => ({ ...m.profiles, user_id: m.user_id, role: m.role }))
         )
         const current = rows.find((m) => m.user_id === userId)
         if (current) setUserRole(current.role)
-      })
-    } else {
-      setMembers([])
+      } catch (error) {
+        console.error('Failed to load members:', error)
+        if (!cancelled) setMembers([])
+      }
+    }
+    
+    loadMembers()
+    
+    return () => {
+      cancelled = true
     }
   }, [open, conversationId, userId])
 

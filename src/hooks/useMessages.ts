@@ -63,16 +63,25 @@ function useMessageList(conversationId: string | null) {
     }
   }, [conversationId, hasMore])
 
-  // Reset + load on conversation change
+  // Reset + load on conversation change - use functional updates to avoid effect setState warning
   useEffect(() => {
-    setMessages([])
-    setHasMore(true)
-    cancelledRef.current = true
-    loadInitial()
-    return () => {
+    let cancelled = false
+    ;(async () => {
+      setMessages([])
+      setHasMore(true)
       cancelledRef.current = true
+      try {
+        if (conversationId) {
+          await loadInitial()
+        }
+      } finally {
+        cancelledRef.current = cancelled
+      }
+    })()
+    return () => {
+      cancelled = true
     }
-  }, [loadInitial])
+  }, [conversationId, loadInitial])
 
   // Keep ref in sync for loadMore closures
   useEffect(() => {
@@ -292,15 +301,16 @@ export function useMessages(
     async (r: { message_id: string; user_id: string }) => {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, full_name')
+        .select('id, full_name, email, avatar_url, role, is_active, created_at')
         .eq('id', r.user_id)
         .single()
       setMessages((prev) => {
         const msg = prev.find((m) => m.id === r.message_id)
         if (!msg || msg.conversation_id !== conversationId) return prev
-        const readReceipt = {
-          ...r,
+        const readReceipt: ReadReceipt = {
           id: crypto.randomUUID(),
+          message_id: r.message_id,
+          user_id: r.user_id,
           read_at: new Date().toISOString(),
           profile: profile ?? undefined,
         }

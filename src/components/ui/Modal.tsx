@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 
 interface ModalProps {
@@ -30,7 +30,7 @@ export default function Modal({
 }: ModalProps) {
   const closeRef = useRef<HTMLButtonElement>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
-  const titleId = useRef(`modal-title-${modalCounter++}`)
+  const [titleId] = useState(() => `modal-title-${modalCounter++}`)
 
   useEffect(() => {
     if (!open) return
@@ -82,7 +82,7 @@ export default function Modal({
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 animate-ios-fade md:items-center"
       role="dialog"
       aria-modal="true"
-      aria-labelledby={title ? titleId.current : undefined}
+      aria-labelledby={title ? titleId : undefined}
       onKeyDown={handleKeyDown}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
@@ -102,7 +102,7 @@ export default function Modal({
         {title && (
           <div className="relative flex items-center justify-center border-b border-ios-separator-light px-4 py-3 dark:border-ios-separator-dark md:px-6">
             <h2
-              id={titleId.current}
+              id={titleId}
               className="text-[17px] font-semibold text-ios-label-light dark:text-ios-label-dark"
             >
               {title}

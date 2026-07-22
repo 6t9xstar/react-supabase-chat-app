@@ -160,7 +160,7 @@ export async function getConversationMembers(conversationId: string): Promise<{ 
     .from('conversation_members')
     .select('user_id, role, profiles!inner(id, full_name, avatar_url)')
     .eq('conversation_id', conversationId)
-  return (data ?? []) as any
+  return (data ?? []) as unknown as { user_id: string; role: string; profiles: { id: string; full_name: string; avatar_url: string | null } }[]
 }
 
 export async function updateMemberRole(conversationId: string, userId: string, role: 'member' | 'admin') {
