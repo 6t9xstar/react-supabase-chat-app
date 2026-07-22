@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
-import type { Message, Attachment } from '../../types/database'
+import type { Message, Attachment, Reaction as ReactionType } from '../../types/database'
 import { supabase } from '../../lib/supabase'
 import { formatTimeShort, isToday, formatTime } from '../../lib/formatDate'
 import { isImage, isVideo, isAudio } from '../../lib/storage/config'
@@ -72,7 +72,7 @@ export default function MessageItem({
   const [editText, setEditText] = useState(message.content ?? '')
   const [savingEdit, setSavingEdit] = useState(false)
   const [reactions, setReactions] = useState(message.reactions ?? [])
-  const [readReceipts, setReadReceipts] = useState(message.read_receipts ?? [])
+  const [_readReceipts] = useState(message.read_receipts ?? [])
   const [pinnedId, setPinnedId] = useState<string | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [deletedLocally, setDeletedLocally] = useState(false)
@@ -224,12 +224,12 @@ export default function MessageItem({
     return reactions.reduce<Record<string, { count: number; mine: boolean }>>((acc, r) => {
       if (!acc[r.emoji]) acc[r.emoji] = { count: 0, mine: false }
       acc[r.emoji].count++
-      if (r.user_id === currentUserId) acc[r.emoji].mine = true
+      if ((r as ReactionType).user_id === currentUserId) acc[r.emoji].mine = true
       return acc
-    }, {})
+    }, {} as Record<string, { count: number; mine: boolean }>)
   }, [reactions, currentUserId])
 
-  const seenBy = readReceipts
+  const seenBy = _readReceipts
     .filter((r) => r.profile?.full_name)
     .slice(0, 3)
     .map((r) => r.profile!.full_name)
@@ -438,7 +438,7 @@ export default function MessageItem({
               {isOwn && seenBy.length > 0 ? (
                 <span
                   title={`Seen by ${seenBy.join(', ')}${
-                    readReceipts.length > 3 ? ` +${readReceipts.length - 3}` : ''
+                    _readReceipts.length > 3 ? ` +${_readReceipts.length - 3}` : ''
                   }`}
                   aria-label={`Seen by ${seenBy.join(', ')}`}
                 >

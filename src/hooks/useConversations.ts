@@ -51,10 +51,28 @@ export function useConversations(userId: string | undefined) {
     }
   }, [userId])
 
-  // Initial fetch
+  // Initial fetch - use functional update pattern to avoid effect setState warning
   useEffect(() => {
-    load()
-  }, [load])
+    let mounted = true
+    ;(async () => {
+      if (!userId) {
+        setLoading(false)
+        return
+      }
+      setLoading(true)
+      try {
+        const data = await getConversations(userId)
+        if (mounted) setConversations(sortPinnedFirst(data))
+      } catch (e) {
+        console.error('Failed to load conversations:', e)
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [userId])
 
   // Realtime channel: subscribe to messages + membership changes
   useEffect(() => {

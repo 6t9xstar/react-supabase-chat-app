@@ -21,7 +21,7 @@ export function usePresence(conversationId: string | null, currentUserId: string
       const state = channel.presenceState()
       const userIds = Object.values(state)
         .flat()
-        .map((p: any) => p.user_id)
+        .map((p) => (p as { user_id: string }).user_id)
         .filter((id: string) => id !== currentUserId)
       setOnlineUserIds(userIds)
     })

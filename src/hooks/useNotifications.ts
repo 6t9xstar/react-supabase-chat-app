@@ -28,8 +28,12 @@ async function fetchSenderName(senderId: string): Promise<string> {
 
 export function useNotifications({ userId, activeConversationId, autoRequest = false }: NotificationOptions) {
   const permissionRequested = useRef(false)
-  const convIdRef = useRef(activeConversationId)
-  convIdRef.current = activeConversationId
+  const convIdRef = useRef<string | null>(activeConversationId)
+
+  // Keep ref in sync with active conversation (used in async callback)
+  useEffect(() => {
+    convIdRef.current = activeConversationId
+  }, [activeConversationId])
 
   // Exposed so the UI can gate permission behind an explicit user action
   // instead of popping a permission dialog on the first incoming message.

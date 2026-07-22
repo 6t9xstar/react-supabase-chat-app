@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
-import type { Message } from '../../types/database'
+import type { Message, Attachment } from '../../types/database'
 import { supabase } from '../../lib/supabase'
 import { markAsRead } from '../../lib/messages'
 import { useMessages } from '../../hooks/useMessages'
@@ -98,7 +98,7 @@ useEffect(() => {
   )
 
   const handleSendWithAttachments = useCallback(
-    (content: string, attachments: any[], replyToId?: string | null) => {
+    (content: string, attachments: Attachment[], replyToId?: string | null) => {
       sendWithAttachments(content, attachments, replyToId ?? null)
       setShowConfetti(true)
       setTimeout(() => setShowConfetti(false), 1500)

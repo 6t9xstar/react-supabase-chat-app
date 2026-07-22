@@ -21,25 +21,32 @@ export function useSearch(userId: string | undefined, query: string) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (!userId || !query.trim()) {
-      setResults([])
-      return
-    }
-
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(async () => {
-      setLoading(true)
-      try {
-        const data = await searchMessages(userId, query)
-        setResults(data)
-      } catch (e) {
-        console.error('Failed to search messages:', e)
-      } finally {
-        setLoading(false)
+    let cancelled = false
+    
+    const performSearch = async () => {
+      if (!userId || !query.trim()) {
+        if (!cancelled) setResults([])
+        return
       }
-    }, DEBOUNCE_MS)
+
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      debounceRef.current = setTimeout(async () => {
+        setLoading(true)
+        try {
+          const data = await searchMessages(userId, query)
+          if (!cancelled) setResults(data)
+        } catch (e) {
+          console.error('Failed to search messages:', e)
+        } finally {
+          if (!cancelled) setLoading(false)
+        }
+      }, DEBOUNCE_MS)
+    }
+    
+    performSearch()
 
     return () => {
+      cancelled = true
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
   }, [userId, query])

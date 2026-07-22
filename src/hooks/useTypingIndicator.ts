@@ -26,7 +26,7 @@ export function useTypingIndicator(
   // Open / close channel on conversation change
   useEffect(() => {
     if (!conversationId) return
-    setReady(false)
+    let mounted = false
 
     const channel = supabase.channel(`typing:${conversationId}`)
 
@@ -40,7 +40,10 @@ export function useTypingIndicator(
     })
 
     channel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') setReady(true)
+      if (status === 'SUBSCRIBED') {
+        mounted = true
+        setReady(true)
+      }
     })
     channelRef.current = channel
 
