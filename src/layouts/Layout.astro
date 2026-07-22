@@ -1,13 +1,453 @@
-<!doctype html>
-<html lang="en">
+---
+// Bundle the global stylesheet through Astro/Vite so the custom iOS design-system
+// classes ship in the production build. A raw <link href="/src/..."> only resolves
+// in dev and 404s in the static build.
+import '../styles/global.css'
+---
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="no-js">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Apex Chat — Internal Team Communication" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!--
+      viewport-fit=cover:
+      Enables safe-area support for notched devices when using env(safe-area-inset-*).
+
+      interactive-widget=resizes-content:
+      Helpful for chat apps on mobile. It tells the browser to resize visual viewport
+      when the virtual keyboard opens instead of overlaying content.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+
     <title>Apex Chat</title>
+
+    <meta
+      name="description"
+      content="Apex Chat — Internal Team Communication"
+    />
+
+    <meta name="application-name" content="Apex Chat" />
+    <meta name="apple-mobile-web-app-title" content="Apex Chat" />
+
+    <!--
+      Internal/private app by default.
+      If this app should be publicly indexed, change to:
+      <meta name="robots" content="index, follow" />
+    -->
+    <meta name="robots" content="noindex, nofollow" />
+
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!--
+      Lets the browser know this app supports light and dark schemes.
+    -->
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
+
+    <!-- Theme color is updated dynamically by the bootstrap script below. -->
+    <meta name="theme-color" content="#FFFFFF" />
+
+    <!-- PWA / mobile app metadata -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-TileColor" content="#0f0f0f" />
+
+    <!-- Icons / manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="/favicon.svg"
+      sizes="any"
+    />
+
+    <link rel="alternate icon" href="/favicon.ico" />
+
+    <link
+      rel="apple-touch-icon"
+      href="/icon-180.png"
+    />
+
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/icon-192.png"
+    />
+
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/icon-512.png"
+    />
+
+    <link
+      rel="mask-icon"
+      href="/favicon.svg"
+      color="#2563eb"
+    />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Apex Chat" />
+    <meta property="og:title" content="Apex Chat" />
+    <meta property="og:description" content="Internal team communication" />
+    <meta property="og:url" content="https://your-domain.com/" />
+    <meta property="og:image" content="https://your-domain.com/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Apex Chat preview" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Apex Chat" />
+    <meta name="twitter:description" content="Internal team communication" />
+    <meta name="twitter:image" content="https://your-domain.com/og.png" />
+    <meta name="twitter:image:alt" content="Apex Chat preview" />
+
+    <!--
+      Optional structured data.
+      Enable only if this page is public.
+    -->
+    <!--
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Apex Chat",
+        "description": "Internal team communication",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "url": "https://your-domain.com/"
+      }
+    </script>
+    -->
+
+    <!--
+      Theme bootstrap.
+      This must run before the body paints to avoid dark-mode flash.
+    -->
+    <script>
+      (() => {
+        const root = document.documentElement;
+
+        root.classList.remove("no-js");
+        root.classList.add("js");
+
+        const THEME_KEY = "theme";
+        const systemQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+        /*
+          Match these colors to global.css.
+          If you kept your original dark background, use:
+          dark: "#171717"
+        */
+        const themeColors = {
+          light: "#FFFFFF",
+          dark: "#000000",
+        };
+
+        const getStoredTheme = () => {
+          try {
+            return localStorage.getItem(THEME_KEY);
+          } catch {
+            return null;
+          }
+        };
+
+        const setMetaThemeColor = (isDark) => {
+          let meta = document.querySelector('meta[name="theme-color"]');
+
+          if (!meta) {
+            meta = document.createElement("meta");
+            meta.setAttribute("name", "theme-color");
+            document.head.appendChild(meta);
+          }
+
+          meta.setAttribute(
+            "content",
+            isDark ? themeColors.dark : themeColors.light
+          );
+        };
+
+        const applyTheme = (theme) => {
+          const isDark =
+            theme === "dark" ||
+            (theme !== "light" && systemQuery.matches);
+
+          root.classList.toggle("dark", isDark);
+          root.setAttribute("data-theme", isDark ? "dark" : "light");
+          root.style.colorScheme = isDark ? "dark" : "light";
+
+          setMetaThemeColor(isDark);
+        };
+
+        applyTheme(getStoredTheme());
+
+        const onSystemThemeChange = () => {
+          const stored = getStoredTheme();
+
+          if (!stored || stored === "system") {
+            applyTheme(stored || "system");
+          }
+        };
+
+        if (typeof systemQuery.addEventListener === "function") {
+          systemQuery.addEventListener("change", onSystemThemeChange);
+        } else if (typeof systemQuery.addListener === "function") {
+          systemQuery.addListener(onSystemThemeChange);
+        }
+
+        /*
+          Optional global theme helper.
+
+          Usage:
+          window.ApexTheme.set("dark");
+          window.ApexTheme.set("light");
+          window.ApexTheme.set("system");
+          window.ApexTheme.clear();
+        */
+        window.ApexTheme = {
+          get() {
+            return getStoredTheme() || "system";
+          },
+
+          set(theme) {
+            const allowed = new Set(["light", "dark", "system"]);
+            const next = allowed.has(theme) ? theme : "system";
+
+            try {
+              localStorage.setItem(THEME_KEY, next);
+            } catch {
+              /* no-op */
+            }
+
+            applyTheme(next);
+          },
+
+          clear() {
+            try {
+              localStorage.removeItem(THEME_KEY);
+            } catch {
+              /* no-op */
+            }
+
+            applyTheme("system");
+          },
+        };
+      })();
+    </script>
+
+    <!--
+      Critical base styles.
+      These prevent white-flash and layout flash before global.css loads.
+    -->
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        height: 100%;
+        scroll-behavior: smooth;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        background-color: #F2F2F7;
+        color: #000000;
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          "SF Pro Display",
+          "SF Pro Text",
+          system-ui,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      html.dark body {
+        background-color: #000000;
+        color: #FFFFFF;
+      }
+
+      slot {
+        display: contents;
+      }
+
+      :focus-visible {
+        outline: 2px solid #007AFF;
+        outline-offset: 2px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+
+      /* Optional boot screen styles */
+      .app-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        background-color: #F2F2F7;
+        color: #000000;
+      }
+
+      html.dark .app-boot {
+        background-color: #000000;
+        color: #FFFFFF;
+      }
+
+      .app-boot__card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        opacity: 0.85;
+      }
+
+      .app-boot__spinner {
+        width: 18px;
+        height: 18px;
+        border-radius: 9999px;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        animation: app-boot-spin 0.8s linear infinite;
+      }
+
+      @keyframes app-boot-spin {
+        to {
+          transform: rotate(1turn);
+        }
+      }
+
+      html.no-js .app-boot {
+        display: none;
+      }
+    </style>
+
+    <!--
+      If this is a Vite SPA, add your app entry here.
+      Example:
+      <script type="module" src="/src/main.ts"></script>
+    -->
   </head>
-  <body class="h-screen overflow-hidden">
+
+  <body class="h-dvh overflow-hidden">
+    <noscript>
+      <div
+        style="
+          position: fixed;
+          inset: 0;
+          display: grid;
+          place-items: center;
+          padding: 24px;
+          text-align: center;
+          background-color: #f9fafb;
+          color: #111827;
+          font-family:
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            'Segoe UI',
+            Roboto,
+            Helvetica,
+            Arial,
+            sans-serif;
+        "
+      >
+        <div>
+          <p style="margin: 0 0 8px; font-weight: 600">
+            Apex Chat requires JavaScript
+          </p>
+          <p style="margin: 0; opacity: 0.75">
+            Please enable JavaScript to use the app.
+          </p>
+        </div>
+      </div>
+    </noscript>
+
     <slot />
+
+    <!--
+      Optional boot screen.
+      Remove it after your app has mounted.
+
+      Example:
+      document.getElementById("app-boot")?.remove();
+    -->
+    <!--
+    <div
+      id="app-boot"
+      class="app-boot"
+      role="status"
+      aria-live="polite"
+      aria-label="Loading Apex Chat"
+    >
+      <div class="app-boot__card">
+        <span class="app-boot__spinner" aria-hidden="true"></span>
+        <span>Loading Apex Chat…</span>
+      </div>
+    </div>
+    -->
+
+    <script>
+      /*
+        Service worker registration.
+
+        Notes:
+        - Service workers require HTTPS, except on localhost.
+        - If your app is served from a subpath, use a relative path like:
+          navigator.serviceWorker.register("sw.js")
+      */
+      if (window.isSecureContext && "serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js", {
+              updateViaCache: "none",
+            })
+            .catch((error) => {
+              console.warn("Service worker registration failed:", error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import type { Session } from '@supabase/supabase-js'
 
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
@@ -24,12 +25,11 @@ export async function updatePassword(password: string) {
 }
 
 export async function getCurrentUser() {
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data.user) return null
-  return data.user
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.user ?? null
 }
 
-export function onAuthStateChange(callback: (event: string, session: any) => void) {
+export function onAuthStateChange(callback: (event: string, session: Session | null) => void) {
   return supabase.auth.onAuthStateChange((event, session) => {
     if (session?.access_token) {
       supabase.realtime.setAuth(session.access_token)

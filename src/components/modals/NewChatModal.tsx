@@ -2,9 +2,8 @@ import { useState } from 'react'
 import { createGroupConversation, findOrCreateDirectConversation } from '../../lib/conversations'
 import { useProfiles } from '../../hooks/useProfiles'
 import Modal from '../ui/Modal'
-import Button from '../ui/Button'
 import Avatar from '../ui/Avatar'
-import { Search, Loader2 } from 'lucide-react'
+import { Search, Loader2, MessageCircle, Users, ChevronRight, Check } from 'lucide-react'
 
 interface NewChatModalProps {
   open: boolean
@@ -13,6 +12,12 @@ interface NewChatModalProps {
   onConversationCreated: (id: string) => void
 }
 
+/**
+ * iOS-style new chat flow.
+ *  - Mode picker: "New Message" vs "New Group" (card list with chevrons)
+ *  - Member search & multi-select with iOS-style checkmarks
+ *  - Group name input
+ */
 export default function NewChatModal({ open, onClose, userId, onConversationCreated }: NewChatModalProps) {
   const [mode, setMode] = useState<'direct' | 'group' | null>(null)
   const [groupName, setGroupName] = useState('')
@@ -27,7 +32,7 @@ export default function NewChatModal({ open, onClose, userId, onConversationCrea
   }
 
   const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id])
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]))
   }
 
   const handleCreate = async () => {
@@ -63,100 +68,170 @@ export default function NewChatModal({ open, onClose, userId, onConversationCrea
 
   if (!mode) {
     return (
-      <Modal open={open} onClose={handleClose} title="New Chat">
-        <div className="space-y-3">
+      <Modal open={open} onClose={handleClose} title="New Chat" hideClose>
+        <div className="space-y-2 p-4">
           <button
             onClick={() => setMode('direct')}
-            className="flex w-full items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-left hover:bg-gray-50"
+            className="ios-press flex w-full items-center gap-3 rounded-ios-lg bg-ios-fill-light p-3 active:bg-ios-fill-light/70 dark:bg-ios-secondary-dark dark:active:bg-ios-secondary-dark/70"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100">
-              <span className="text-lg">💬</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-ios-blue-light text-white dark:bg-ios-blue-dark">
+              <MessageCircle className="h-5 w-5" strokeWidth={2.2} />
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900">Direct Message</p>
-              <p className="text-xs text-gray-500">Chat with another employee</p>
+            <div className="flex-1 text-left">
+              <p className="text-[15px] font-medium text-ios-label-light dark:text-ios-label-dark">
+                New Message
+              </p>
+              <p className="text-[12px] text-ios-secondary_label-light dark:text-ios-secondary_label-dark">
+                Chat with a single person
+              </p>
             </div>
+            <ChevronRight className="h-4 w-4 text-ios-tertiary_label-light dark:text-ios-tertiary_label-dark" strokeWidth={2.5} />
           </button>
+
           <button
             onClick={() => setMode('group')}
-            className="flex w-full items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-left hover:bg-gray-50"
+            className="ios-press flex w-full items-center gap-3 rounded-ios-lg bg-ios-fill-light p-3 active:bg-ios-fill-light/70 dark:bg-ios-secondary-dark dark:active:bg-ios-secondary-dark/70"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-              <span className="text-lg">👥</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-ios-green-light text-white dark:bg-ios-green-dark">
+              <Users className="h-5 w-5" strokeWidth={2.2} />
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900">Group Chat</p>
-              <p className="text-xs text-gray-500">Create a team conversation</p>
+            <div className="flex-1 text-left">
+              <p className="text-[15px] font-medium text-ios-label-light dark:text-ios-label-dark">
+                New Group
+              </p>
+              <p className="text-[12px] text-ios-secondary_label-light dark:text-ios-secondary_label-dark">
+                Start a team conversation
+              </p>
             </div>
+            <ChevronRight className="h-4 w-4 text-ios-tertiary_label-light dark:text-ios-tertiary_label-dark" strokeWidth={2.5} />
           </button>
         </div>
+        <div className="h-[env(safe-area-inset-bottom)]" />
       </Modal>
     )
   }
 
   return (
-    <Modal open={open} onClose={handleClose} title={mode === 'group' ? 'Create Group' : 'New Direct Message'}>
-      <div className="space-y-4">
+    <Modal
+      open={open}
+      onClose={handleClose}
+      title={mode === 'group' ? 'New Group' : 'New Message'}
+      hideClose
+    >
+      <div className="p-4">
         {mode === 'group' && (
-          <input
-            type="text"
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-            placeholder="Group name"
-            className="block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
-          />
+          <div className="mb-3">
+            <label className="mb-1.5 block text-[12px] font-medium uppercase tracking-wide text-ios-secondary_label-light dark:text-ios-secondary_label-dark">
+              Group name
+            </label>
+            <input
+              type="text"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              placeholder="e.g. Marketing Team"
+              className="h-10 w-full rounded-[10px] bg-ios-fill-light px-3 text-[15px] text-ios-label-light placeholder:text-ios-secondary_label-light focus:outline-none focus:ring-2 focus:ring-ios-blue-light/40 dark:bg-ios-secondary-dark dark:text-ios-label-dark dark:placeholder:text-ios-secondary_label-dark"
+            />
+          </div>
         )}
 
+        <label className="mb-1.5 block text-[12px] font-medium uppercase tracking-wide text-ios-secondary_label-light dark:text-ios-secondary_label-dark">
+          {mode === 'group' ? 'To:' : 'Send to'}
+        </label>
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search
+            className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ios-secondary_label-light dark:text-ios-secondary_label-dark"
+            strokeWidth={2.5}
+          />
           <input
             type="text"
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Search employees..."
-            className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-3 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+            placeholder="Search people"
+            aria-label="Search employees"
+            className="h-9 w-full rounded-[10px] bg-ios-fill-light pl-8 pr-3 text-[15px] text-ios-label-light placeholder:text-ios-secondary_label-light focus:outline-none focus:ring-2 focus:ring-ios-blue-light/40 dark:bg-ios-secondary-dark dark:text-ios-label-dark dark:placeholder:text-ios-secondary_label-dark"
           />
         </div>
 
-        <div className="max-h-64 overflow-y-auto space-y-1">
-          {profiles
-            .filter((p) => p.id !== userId)
-            .map((p) => (
+        {selectedIds.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {selectedIds.map((id) => {
+              const p = profiles.find((x) => x.id === id)
+              return (
+                <span
+                  key={id}
+                  className="ios-press flex items-center gap-1.5 rounded-full bg-ios-blue-light py-0.5 pl-0.5 pr-2 text-white active:bg-ios-blue-light/85 dark:bg-ios-blue-dark"
+                >
+                  <Avatar name={p?.full_name ?? '?'} size="xs" src={p?.avatar_url} />
+                  <span className="text-[12px] font-medium">{p?.full_name ?? 'User'}</span>
+                </span>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="max-h-72 overflow-y-auto px-2 pb-2">
+        {profiles
+          .filter((p) => p.id !== userId)
+          .map((p) => {
+            const selected = selectedIds.includes(p.id)
+            return (
               <button
                 key={p.id}
                 onClick={() => toggleSelect(p.id)}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left hover:bg-gray-50 ${
-                  selectedIds.includes(p.id) ? 'bg-brand-50' : ''
-                }`}
+                className="ios-press flex w-full items-center gap-3 rounded-[10px] px-2 py-2 active:bg-ios-fill-light dark:active:bg-ios-fill-dark"
               >
-                <Avatar name={p.full_name} size="sm" />
-                <div className="flex-1 min-w-0">
-                  <p className="truncate text-sm font-medium text-gray-900">{p.full_name}</p>
-                  <p className="text-xs text-gray-500">{p.email ?? p.role}</p>
+                <Avatar name={p.full_name} size="md" src={p.avatar_url} />
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="truncate text-[15px] font-medium text-ios-label-light dark:text-ios-label-dark">
+                    {p.full_name}
+                  </p>
+                  <p className="truncate text-[12px] text-ios-secondary_label-light dark:text-ios-secondary_label-dark">
+                    {p.email ?? p.role}
+                  </p>
                 </div>
-                {selectedIds.includes(p.id) && (
-                  <div className="h-5 w-5 rounded-full bg-brand-500 flex items-center justify-center">
-                    <span className="text-xs text-white">✓</span>
-                  </div>
-                )}
+                <div
+                  className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
+                    selected
+                      ? 'border-ios-blue-light bg-ios-blue-light dark:border-ios-blue-dark dark:bg-ios-blue-dark'
+                      : 'border-ios-tertiary_label-light dark:border-ios-tertiary_label-dark'
+                  }`}
+                >
+                  {selected && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
+                </div>
               </button>
-            ))}
-        </div>
+            )
+          })}
+      </div>
 
-        <div className="flex justify-end gap-3 pt-2">
-          <Button variant="secondary" onClick={() => setMode(null)}>Back</Button>
-          <Button
+      <div className="border-t border-ios-separator-light p-4 dark:border-ios-separator-dark">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setMode(null)}
+            className="ios-press flex-1 rounded-[10px] bg-ios-fill-light py-2.5 text-[15px] font-medium text-ios-label-light active:bg-ios-fill-light/70 dark:bg-ios-secondary-dark dark:text-ios-label-dark"
+          >
+            Back
+          </button>
+          <button
             onClick={handleCreate}
             disabled={
               creating ||
               (mode === 'direct' && selectedIds.length !== 1) ||
               (mode === 'group' && (!groupName.trim() || selectedIds.length === 0))
             }
+            className="ios-press flex flex-1 items-center justify-center rounded-[10px] bg-ios-blue-light py-2.5 text-[15px] font-semibold text-white active:bg-ios-blue-light/85 disabled:opacity-40 dark:bg-ios-blue-dark"
           >
-            {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : (mode === 'group' ? 'Create Group' : 'Start Chat')}
-          </Button>
+            {creating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : mode === 'group' ? (
+              'Create'
+            ) : (
+              'Send'
+            )}
+          </button>
         </div>
       </div>
+      <div className="h-[env(safe-area-inset-bottom)]" />
     </Modal>
   )
 }

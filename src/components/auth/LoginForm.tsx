@@ -17,8 +17,8 @@ export default function LoginForm() {
     try {
       await signIn(email, password)
       window.location.href = '/chat'
-    } catch (err: any) {
-      setError(err.message || 'Invalid email or password')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Invalid email or password')
     } finally {
       setLoading(false)
     }
@@ -34,8 +34,8 @@ export default function LoginForm() {
     try {
       await resetPassword(email)
       setResetSent(true)
-    } catch (err: any) {
-      setError(err.message || 'Failed to send reset email')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send reset email')
     } finally {
       setLoading(false)
     }
@@ -103,6 +103,7 @@ export default function LoginForm() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-brand-300 hover:text-brand-100"
                   tabIndex={-1}
+                  aria-label="Toggle password visibility"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>

@@ -1,6 +1,5 @@
 import { supabase } from './supabase'
-import type { Message } from '../types/database'
-import { getProfile } from './profiles'
+import type { Message, Reaction, PinnedMessage, ReadReceipt } from '../types/database'
 
 const PAGE_SIZE = 50
 
@@ -35,7 +34,7 @@ export async function getMessages(
 ): Promise<{ messages: Message[]; hasMore: boolean }> {
   let query = supabase
     .from('messages')
-    .select('*, sender:profiles!sender_id(id, full_name, avatar_url), reply_to:messages!reply_to_id(id, content, sender_id)')
+    .select('*, sender:profiles!sender_id(id, full_name, avatar_url), reply_to:messages!reply_to_id(id, content, sender_id, deleted_at), forwarded_from:messages!forwarded_from_id(id, content, sender_id, deleted_at, sender:profiles!sender_id(id, full_name)), reactions:reactions(*), read_receipts:read_receipts(*, profile:profiles(id, full_name))')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: false })
     .order('id', { ascending: false })
@@ -56,7 +55,8 @@ export async function sendMessage(
   conversationId: string,
   senderId: string,
   content: string,
-  replyToId?: string | null
+  replyToId?: string | null,
+  forwardedFromId?: string | null
 ): Promise<Message> {
   const { data, error } = await supabase
     .from('messages')
@@ -65,6 +65,7 @@ export async function sendMessage(
       sender_id: senderId,
       content,
       reply_to_id: replyToId ?? null,
+      forwarded_from_id: forwardedFromId ?? null,
     })
     .select('*, sender:profiles!sender_id(id, full_name, avatar_url)')
     .single()
@@ -130,11 +131,74 @@ export async function markAsRead(conversationId: string, userId: string): Promis
 
   if (!lastMessage?.length) return
 
+  const readAt = new Date().toISOString()
+
   const { error } = await supabase
     .from('message_reads')
     .upsert(
-      { message_id: lastMessage[0].id, user_id: userId, read_at: new Date().toISOString() },
+      { message_id: lastMessage[0].id, user_id: userId, read_at: readAt },
       { onConflict: 'message_id,user_id' }
     )
   if (error) throw error
+
+  // Also write a per-message read receipt so the sender's "Seen ✓✓" indicator
+  // lights up (the message list subscribes to read_receipts INSERTs).
+  const { error: receiptError } = await supabase
+    .from('read_receipts')
+    .upsert(
+      { message_id: lastMessage[0].id, user_id: userId, read_at: readAt },
+      { onConflict: 'message_id,user_id' }
+    )
+  if (receiptError) console.error('Failed to write read receipt:', receiptError)
+}
+
+// -- Reactions --
+
+export async function toggleReaction(messageId: string, userId: string, emoji: string): Promise<boolean> {
+  const { data: existing } = await supabase
+    .from('reactions')
+    .select('id')
+    .eq('message_id', messageId)
+    .eq('user_id', userId)
+    .eq('emoji', emoji)
+    .maybeSingle()
+
+  if (existing) {
+    const { error } = await supabase.from('reactions').delete().eq('id', existing.id)
+    if (error) throw error
+    return false
+  }
+
+  const { error } = await supabase.from('reactions').insert({ message_id: messageId, user_id: userId, emoji })
+  if (error) throw error
+  return true
+}
+
+export async function getPinnedMessages(conversationId: string): Promise<PinnedMessage[]> {
+  const { data } = await supabase
+    .from('pinned_messages')
+    .select('*, message:messages!message_id(id, content, sender_id, created_at, sender:profiles!sender_id(id, full_name)), pinner:profiles!pinned_by(id, full_name)')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: false })
+  return data ?? []
+}
+
+export async function pinMessage(conversationId: string, messageId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('pinned_messages')
+    .insert({ conversation_id: conversationId, message_id: messageId, pinned_by: userId })
+  if (error) throw error
+}
+
+export async function unpinMessage(pinId: string): Promise<void> {
+  const { error } = await supabase.from('pinned_messages').delete().eq('id', pinId)
+  if (error) throw error
+}
+
+export async function getReadReceipts(messageId: string): Promise<ReadReceipt[]> {
+  const { data } = await supabase
+    .from('read_receipts')
+    .select('*, profile:profiles(id, full_name)')
+    .eq('message_id', messageId)
+  return data ?? []
 }

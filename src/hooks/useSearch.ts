@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { searchMessages } from '../lib/messages'
-import type { Message } from '../types/database'
+
+/* -------------------------------------------------------------------------- */
+/*  useSearch                                                                 */
+/*  Debounced (300ms) full-text search across all of a user's messages.       */
+/* -------------------------------------------------------------------------- */
 
 interface SearchResult {
   conversation_id: string
@@ -8,6 +12,8 @@ interface SearchResult {
   created_at: string
   sender_id: string
 }
+
+const DEBOUNCE_MS = 300
 
 export function useSearch(userId: string | undefined, query: string) {
   const [results, setResults] = useState<SearchResult[]>([])
@@ -21,13 +27,17 @@ export function useSearch(userId: string | undefined, query: string) {
     }
 
     if (debounceRef.current) clearTimeout(debounceRef.current)
-
     debounceRef.current = setTimeout(async () => {
       setLoading(true)
-      const data = await searchMessages(userId, query)
-      setResults(data)
-      setLoading(false)
-    }, 300)
+      try {
+        const data = await searchMessages(userId, query)
+        setResults(data)
+      } catch (e) {
+        console.error('Failed to search messages:', e)
+      } finally {
+        setLoading(false)
+      }
+    }, DEBOUNCE_MS)
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)

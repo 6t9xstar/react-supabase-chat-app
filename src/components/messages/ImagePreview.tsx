@@ -1,48 +1,68 @@
-import { useState } from 'react'
-import { X, Expand } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { X } from 'lucide-react'
 
 interface ImagePreviewProps {
   src: string
   alt: string
 }
 
+/**
+ * iOS Messages-style image attachment.
+ *  - Tappable thumbnail that opens a fullscreen viewer
+ *  - Fullscreen viewer has tap-to-dismiss on backdrop, native close button
+ */
 export default function ImagePreview({ src, alt }: ImagePreviewProps) {
   const [expanded, setExpanded] = useState(false)
+  const closeBtnRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!expanded) return
+    closeBtnRef.current?.focus()
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setExpanded(false)
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [expanded])
 
   return (
     <>
-      <div className="group relative inline-block max-w-sm cursor-pointer overflow-hidden rounded-lg">
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        className="block max-w-xs overflow-hidden rounded-[12px] active:opacity-90"
+        aria-label={`Expand image: ${alt}`}
+      >
         <img
           src={src}
           alt={alt}
-          className="max-h-64 w-full object-cover transition group-hover:opacity-90"
-          onClick={() => setExpanded(true)}
+          className="max-h-64 w-full object-cover"
           loading="lazy"
+          draggable={false}
         />
-        <button
-          onClick={() => setExpanded(true)}
-          className="absolute right-2 top-2 rounded-lg bg-black/50 p-1.5 text-white opacity-0 transition group-hover:opacity-100"
-        >
-          <Expand className="h-4 w-4" />
-        </button>
-      </div>
+      </button>
 
       {expanded && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 animate-ios-fade"
+          role="dialog"
+          aria-modal="true"
           onClick={() => setExpanded(false)}
         >
           <button
+            ref={closeBtnRef}
             onClick={() => setExpanded(false)}
-            className="absolute right-4 top-4 rounded-lg bg-black/50 p-2 text-white hover:bg-black/70"
+            aria-label="Close image"
+            className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white active:bg-white/30"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5" strokeWidth={2.5} />
           </button>
           <img
             src={src}
             alt={alt}
-            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+            className="max-h-[90vh] max-w-[90vw] rounded-ios-lg object-contain"
             onClick={(e) => e.stopPropagation()}
+            draggable={false}
           />
         </div>
       )}

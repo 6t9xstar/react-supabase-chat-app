@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Conversation, ConversationWithMeta } from '../types/database'
+import type { ConversationWithMeta } from '../types/database'
 
 async function findExistingDirectConversation(userA: string, userB: string): Promise<string | null> {
   const { data: aConvs } = await supabase
@@ -49,45 +49,45 @@ export async function getConversations(userId: string): Promise<ConversationWith
 
   if (!conversations) return []
 
-  const [lastMsgMap, otherUserMap] = await Promise.all([
+  const [lastMsgMap, otherUserMap, unreadMap] = await Promise.all([
     getLastMessagesMap(ids),
     getOtherUsersMap(ids, userId),
+    getUnreadCountsMap(userId),
   ])
 
-  const results: ConversationWithMeta[] = []
-  for (const conv of conversations) {
-    const lastMessageData = lastMsgMap.get(conv.id) ?? null
-    const otherUser = conv.type === 'direct' ? otherUserMap.get(conv.id) ?? null : null
-    const unreadCount = lastMessageData?.id ? await getUnreadCount(conv.id, userId) : 0
+  return conversations.map((conv) => ({
+    ...conv,
+    last_message: lastMsgMap.get(conv.id) ?? null,
+    unread_count: unreadMap.get(conv.id) ?? 0,
+    other_user: conv.type === 'direct' ? otherUserMap.get(conv.id) ?? null : null,
+  }))
+}
 
-    results.push({
-      ...conv,
-      last_message: lastMessageData,
-      unread_count: unreadCount,
-      other_user: otherUser,
-    })
+async function getUnreadCountsMap(userId: string): Promise<Map<string, number>> {
+  try {
+    const { data, error } = await supabase.rpc('get_unread_counts', { p_user_id: userId })
+    if (error) throw error
+    return new Map((data ?? []).map((r: { conversation_id: string; unread_count: number }) => [r.conversation_id, r.unread_count]))
+  } catch (e) {
+    console.error('get_unread_counts failed:', e)
+    return new Map()
   }
-
-  return results
 }
 
 async function getLastMessagesMap(convIds: string[]): Promise<Map<string, { id: string; content: string | null; sender_id: string; created_at: string; deleted_at: string | null }>> {
   const map = new Map()
-  const { data } = await supabase
-    .from('messages')
-    .select('id, conversation_id, content, sender_id, created_at, deleted_at')
-    .in('conversation_id', convIds)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
+  if (!convIds.length) return map
 
-  if (data) {
-    const seen = new Set<string>()
-    for (const msg of data) {
-      if (!seen.has(msg.conversation_id)) {
-        seen.add(msg.conversation_id)
-        map.set(msg.conversation_id, msg)
-      }
-    }
+  const { data, error } = await supabase.rpc('get_last_messages', {
+    p_conversation_ids: convIds,
+  })
+  if (error) {
+    console.error('get_last_messages failed:', error)
+    return map
+  }
+
+  for (const msg of data ?? []) {
+    map.set(msg.conversation_id, msg)
   }
   return map
 }
@@ -116,26 +116,6 @@ async function getOtherUsersMap(convIds: string[], userId: string): Promise<Map<
     }
   }
   return map
-}
-
-async function getLastReadAt(conversationId: string, userId: string): Promise<string | null> {
-  const { data: msg } = await supabase
-    .from('messages')
-    .select('id')
-    .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-
-  if (!msg?.length) return null
-
-  const { data } = await supabase
-    .from('message_reads')
-    .select('read_at')
-    .eq('user_id', userId)
-    .eq('message_id', msg[0].id)
-    .limit(1)
-
-  return data?.[0]?.read_at ?? null
 }
 
 export async function findOrCreateDirectConversation(userA: string, userB: string): Promise<string> {
@@ -175,12 +155,21 @@ export async function createGroupConversation(name: string, createdBy: string, m
   return conv.id
 }
 
-export async function getConversationMembers(conversationId: string) {
+export async function getConversationMembers(conversationId: string): Promise<{ user_id: string; role: string; profiles: { id: string; full_name: string; avatar_url: string | null } }[]> {
   const { data } = await supabase
     .from('conversation_members')
-    .select('user_id, profiles!inner(id, full_name, avatar_url)')
+    .select('user_id, role, profiles!inner(id, full_name, avatar_url)')
     .eq('conversation_id', conversationId)
-  return data ?? []
+  return (data ?? []) as any
+}
+
+export async function updateMemberRole(conversationId: string, userId: string, role: 'member' | 'admin') {
+  const { error } = await supabase
+    .from('conversation_members')
+    .update({ role })
+    .eq('conversation_id', conversationId)
+    .eq('user_id', userId)
+  if (error) throw error
 }
 
 export async function addMember(conversationId: string, userId: string) {

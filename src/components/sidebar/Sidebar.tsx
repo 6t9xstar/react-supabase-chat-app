@@ -1,6 +1,9 @@
-import { useState } from 'react'
-import { MessageCircle, MessageSquarePlus } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { Edit, Archive, ArchiveRestore } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
+import { useTheme } from '../../hooks/useTheme'
+import { useConversations } from '../../hooks/useConversations'
+import ThemeToggle from '../ui/ThemeToggle'
 import ConversationList from './ConversationList'
 import SearchBar from './SearchBar'
 import UserFooter from './UserFooter'
@@ -11,29 +14,68 @@ interface SidebarProps {
   activeConversationId: string | null
   onSelectConversation: (id: string) => void
   onAdminPanel: () => void
+  onEnableNotifications: () => Promise<boolean>
 }
 
-export default function Sidebar({ user, activeConversationId, onSelectConversation, onAdminPanel }: SidebarProps) {
+/**
+ * iOS Messages sidebar (left pane on desktop, full screen on mobile).
+ *  - Frosted header with edit + theme toggle
+ *  - Search bar
+ *  - Pinned / Archived section toggle
+ *  - Conversation list (iOS list style)
+ *  - Account footer (frosted)
+ */
+export default function Sidebar({
+  user,
+  activeConversationId,
+  onSelectConversation,
+  onAdminPanel,
+  onEnableNotifications,
+}: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [newChatOpen, setNewChatOpen] = useState(false)
+  const [showArchived, setShowArchived] = useState(false)
+  const { theme, toggle } = useTheme()
+  const { conversations, loading, refresh } = useConversations(user?.id)
+
+  const handleConversationCreated = useCallback(
+    (id: string) => {
+      onSelectConversation(id)
+      refresh()
+    },
+    [onSelectConversation, refresh]
+  )
 
   return (
-    <aside className="flex w-80 flex-col border-r border-gray-200 bg-white">
-      <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600">
-          <MessageCircle className="h-5 w-5 text-white" />
+    <aside className="flex h-full w-full flex-col bg-ios-grouped-light dark:bg-ios-grouped-dark">
+      {/* Header — large title (iOS style) */}
+      <div className="flex items-end justify-between gap-2 px-4 pb-2 pt-3">
+        <h1 className="text-[34px] font-bold leading-[40px] tracking-tight text-ios-label-light dark:text-ios-label-dark">
+          {showArchived ? 'Archive' : 'Messages'}
+        </h1>
+        <div className="flex items-center gap-0.5">
+          <ThemeToggle theme={theme} onToggle={toggle} />
+          <button
+            onClick={() => setShowArchived((v) => !v)}
+            className="ios-press flex h-9 w-9 items-center justify-center rounded-full text-ios-blue-light hover:bg-ios-blue-light/10 active:bg-ios-blue-light/20 dark:text-ios-blue-dark dark:hover:bg-ios-blue-dark/20"
+            title={showArchived ? 'Show active chats' : 'Show archived chats'}
+            aria-label={showArchived ? 'Show active chats' : 'Show archived chats'}
+          >
+            {showArchived ? (
+              <ArchiveRestore className="h-[18px] w-[18px]" strokeWidth={2.2} />
+            ) : (
+              <Archive className="h-[18px] w-[18px]" strokeWidth={2.2} />
+            )}
+          </button>
+          <button
+            onClick={() => setNewChatOpen(true)}
+            className="ios-press flex h-9 w-9 items-center justify-center rounded-full text-ios-blue-light hover:bg-ios-blue-light/10 active:bg-ios-blue-light/20 dark:text-ios-blue-dark dark:hover:bg-ios-blue-dark/20"
+            title="New Chat"
+            aria-label="New chat"
+          >
+            <Edit className="h-[18px] w-[18px]" strokeWidth={2.2} />
+          </button>
         </div>
-        <div className="flex-1">
-          <h1 className="text-sm font-bold text-gray-900">Apex Chat</h1>
-          <p className="text-xs text-gray-500">Internal</p>
-        </div>
-        <button
-          onClick={() => setNewChatOpen(true)}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-500"
-          title="New Chat"
-        >
-          <MessageSquarePlus className="h-5 w-5" />
-        </button>
       </div>
 
       <SearchBar
@@ -43,23 +85,25 @@ export default function Sidebar({ user, activeConversationId, onSelectConversati
         onSelectResult={onSelectConversation}
       />
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin">
-        <ConversationList
-          userId={user?.id}
-          searchQuery={searchQuery}
-          activeConversationId={activeConversationId}
-          onSelect={onSelectConversation}
-        />
-      </div>
+      <ConversationList
+        conversations={conversations}
+        loading={loading}
+        userId={user?.id}
+        searchQuery={searchQuery}
+        showArchived={showArchived}
+        activeConversationId={activeConversationId}
+        onSelect={onSelectConversation}
+        onRefresh={refresh}
+      />
 
-      <UserFooter user={user} onAdminPanel={onAdminPanel} />
+      <UserFooter user={user} onAdminPanel={onAdminPanel} onEnableNotifications={onEnableNotifications} />
 
       {user && (
         <NewChatModal
           open={newChatOpen}
           onClose={() => setNewChatOpen(false)}
           userId={user.id}
-          onConversationCreated={onSelectConversation}
+          onConversationCreated={handleConversationCreated}
         />
       )}
     </aside>

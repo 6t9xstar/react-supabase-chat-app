@@ -2,28 +2,460 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =========================================================================
+ *  Apex Chat — iOS Messages design system
+ *  Soft, rounded, blue. Light + dark, automatic.
+ *  ========================================================================= */
+
 @layer base {
   html {
     @apply antialiased;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
   }
+
   body {
-    @apply bg-gray-50 text-gray-900;
+    /* iOS grouped background as default — feels instantly familiar */
+    @apply bg-ios-grouped-light text-ios-text-light dark:bg-ios-grouped-dark dark:text-ios-text-dark;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* iOS-style text selection */
+  ::selection {
+    background-color: rgba(0, 122, 255, 0.25);
+  }
+  .dark ::selection {
+    background-color: rgba(10, 132, 255, 0.35);
   }
 }
 
+/* =========================================================================
+ *  Scrollbars — iOS-style thin, auto-hide
+ *  ========================================================================= */
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: theme(colors.gray.300) transparent;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
   }
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
   }
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: theme(colors.gray.300);
-    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 9999px;
+  }
+  .dark .scrollbar-thin {
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  /* iOS-style translucent blur (used on header, modals) */
+  .ios-blur {
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  .ios-blur-strong {
+    backdrop-filter: saturate(180%) blur(30px);
+    -webkit-backdrop-filter: saturate(180%) blur(30px);
+  }
+
+  /* Safe-area helpers for notched devices */
+  .pt-safe { padding-top: env(safe-area-inset-top, 0); }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0); }
+  .pl-safe { padding-left: env(safe-area-inset-left, 0); }
+  .pr-safe { padding-right: env(safe-area-inset-right, 0); }
+}
+
+/* =========================================================================
+ *  iOS-style hairline separator
+ *  ========================================================================= */
+.ios-hairline {
+  background-color: rgba(60, 60, 67, 0.29);
+  height: 0.5px;
+}
+.dark .ios-hairline {
+  background-color: rgba(84, 84, 88, 0.65);
+}
+
+/* =========================================================================
+ *  Message bubbles — iOS Messages
+ *  - Own: blue, asymmetric corner (3px) on right (chat edge side)
+ *  - Other: gray, asymmetric corner (3px) on left
+ *  - Grouped: collapses toward the side away from chat edge
+ *  ========================================================================= */
+
+/* Base: must be relative for tail positioning */
+.ios-bubble {
+  position: relative;
+  display: inline-block;
+  max-width: 75%;
+  padding: 8px 14px;
+  font-size: 15px;
+  line-height: 1.35;
+  letter-spacing: -0.2px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  animation: iosBubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Own messages (right-aligned, blue) */
+.ios-bubble-own {
+  background: #007AFF;
+  color: #FFFFFF;
+  border-radius: 20px 20px 4px 20px;
+  box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+}
+.dark .ios-bubble-own {
+  background: #0A84FF;
+}
+
+/* Other messages (left-aligned, gray) */
+.ios-bubble-other {
+  background: #E9E9EB;
+  color: #000000;
+  border-radius: 20px 20px 20px 4px;
+  box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.05);
+}
+.dark .ios-bubble-other {
+  background: #3A3A3C;
+  color: #FFFFFF;
+}
+
+/* Grouped (continuation) corners collapse toward the inside of the chat */
+/* Own message: previous bubbles (grouped) — flatten bottom-right (3px) */
+.ios-bubble-own.ios-bubble-grouped-prev {
+  border-bottom-right-radius: 20px;
+  border-bottom-left-radius: 20px;
+}
+/* Own message: more after (grouped) — flatten top-right (3px) */
+.ios-bubble-own.ios-bubble-grouped-next {
+  border-top-right-radius: 4px;
+}
+/* Last in group, not the last in conversation (grouped above) */
+.ios-bubble-own.ios-bubble-grouped {
+  border-bottom-right-radius: 20px;
+}
+/* Other: previous — flatten bottom-left */
+.ios-bubble-other.ios-bubble-grouped-prev {
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+.ios-bubble-other.ios-bubble-grouped-next {
+  border-top-left-radius: 4px;
+}
+.ios-bubble-other.ios-bubble-grouped {
+  border-bottom-left-radius: 20px;
+}
+
+/* Reaction chip on bubble */
+.ios-reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #000;
+  margin: 2px 2px 0 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  border: 0.5px solid rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.ios-reaction:hover { transform: scale(1.05); }
+.ios-reaction.is-mine {
+  background: #FFFFFF;
+  border-color: #007AFF;
+}
+.dark .ios-reaction {
+  background: rgba(58, 58, 60, 0.95);
+  color: #FFF;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.dark .ios-reaction.is-mine {
+  background: #3A3A3C;
+  border-color: #0A84FF;
+}
+
+/* Reaction popup above the bubble */
+.ios-reaction-popover {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  background: #FFFFFF;
+  border-radius: 22px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+  animation: iosPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dark .ios-reaction-popover {
+  background: #1C1C1E;
+}
+
+/* Image/video attachment inside bubble — slightly tighter rounding */
+.ios-bubble-attachment {
+  display: block;
+  border-radius: 14px;
+  overflow: hidden;
+  margin: -4px -6px;
+}
+
+/* =========================================================================
+ *  Typing indicator (3 bouncing dots, iOS Messages style)
+ *  ========================================================================= */
+.ios-typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 14px;
+  background: #E9E9EB;
+  border-radius: 20px 20px 20px 4px;
+  box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.05);
+  animation: iosBubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dark .ios-typing {
+  background: #3A3A3C;
+}
+.ios-typing-dot {
+  width: 7px;
+  height: 7px;
+  background: #8E8E93;
+  border-radius: 9999px;
+  display: inline-block;
+  animation: iosTyping 1.4s infinite ease-in-out both;
+}
+.ios-typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.ios-typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+/* =========================================================================
+ *  Chat area: smooth scroll, no native scrollbar
+ *  ========================================================================= */
+.ios-chat-area {
+  overscroll-behavior: contain;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.ios-chat-area::-webkit-scrollbar { display: none; }
+
+/* =========================================================================
+ *  Press feedback (iOS-style tap response on touch devices)
+ *  ========================================================================= */
+.ios-press {
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+@media (hover: none) {
+  .ios-press:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
+}
+
+/* =========================================================================
+ *  List row chevron (used in sidebar / modals)
+ *  ========================================================================= */
+.ios-chevron {
+  color: rgba(60, 60, 67, 0.3);
+}
+.dark .ios-chevron {
+  color: rgba(235, 235, 245, 0.3);
+}
+
+/* =========================================================================
+ *  Liquid Glass — iOS 26-ish translucency for sheets and headers
+ *  ========================================================================= */
+.liquid-glass {
+  background-color: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+}
+.dark .liquid-glass {
+  background-color: rgba(28, 28, 30, 0.72);
+}
+
+.liquid-glass-strong {
+  background-color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: saturate(180%) blur(40px);
+  -webkit-backdrop-filter: saturate(180%) blur(40px);
+}
+.dark .liquid-glass-strong {
+  background-color: rgba(28, 28, 30, 0.88);
+}
+
+/* =========================================================================
+ *  Modal sheet (bottom-anchored slide-up sheet, iOS style)
+ *  ========================================================================= */
+.ios-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 50;
+  animation: iosFade 0.2s ease-out;
+}
+.ios-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 51;
+  background: #FFFFFF;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: iosSlideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
+}
+.dark .ios-sheet {
+  background: #1C1C1E;
+}
+
+.ios-sheet-grabber {
+  width: 36px;
+  height: 5px;
+  border-radius: 9999px;
+  background: rgba(60, 60, 67, 0.3);
+  margin: 8px auto 4px;
+}
+.dark .ios-sheet-grabber {
+  background: rgba(235, 235, 245, 0.3);
+}
+
+/* =========================================================================
+ *  Sheet action button row
+ *  ========================================================================= */
+.ios-action-group {
+  background: rgba(120, 120, 128, 0.12);
+  border-radius: 14px;
+  margin: 16px;
+  overflow: hidden;
+}
+.dark .ios-action-group {
+  background: rgba(120, 120, 128, 0.24);
+}
+.ios-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  font-size: 17px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  transition: background-color 0.12s ease;
+  cursor: pointer;
+  border: none;
+  color: inherit;
+}
+.ios-action:not(:last-child) {
+  border-bottom: 0.5px solid rgba(60, 60, 67, 0.2);
+}
+.dark .ios-action:not(:last-child) {
+  border-bottom-color: rgba(84, 84, 88, 0.65);
+}
+.ios-action:active {
+  background: rgba(120, 120, 128, 0.16);
+}
+
+.ios-action-destructive { color: #FF3B30; }
+.dark .ios-action-destructive { color: #FF453A; }
+.ios-action-cancel-group { margin-top: 8px; }
+.ios-action-cancel {
+  font-weight: 600;
+  text-align: center;
+  justify-content: center;
+}
+
+/* =========================================================================
+ *  Bubble meta (timestamp + read receipt)
+ *  ========================================================================= */
+.ios-bubble-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  opacity: 0.75;
+}
+.ios-bubble-own .ios-bubble-meta { color: rgba(255, 255, 255, 0.85); }
+.ios-bubble-other .ios-bubble-meta { color: rgba(60, 60, 67, 0.5); }
+.dark .ios-bubble-other .ios-bubble-meta { color: rgba(235, 235, 245, 0.55); }
+
+/* iOS-style edited label */
+.ios-bubble-edited {
+  font-size: 11px;
+  font-style: italic;
+  opacity: 0.7;
+  margin-left: 4px;
+}
+
+/* =========================================================================
+ *  Swipe action background (sidebar conversations)
+ *  ========================================================================= */
+.ios-swipe-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: white;
+  font-size: 14px;
+}
+.ios-swipe-bg-left {
+  justify-content: flex-start;
+  padding-left: 24px;
+  background: linear-gradient(to right, #FF9500, #FFCC00);
+}
+.ios-swipe-bg-right {
+  justify-content: flex-end;
+  padding-right: 24px;
+  background: linear-gradient(to left, #007AFF, #5AC8FA);
+}
+
+/* =========================================================================
+ *  Animations
+ *  ========================================================================= */
+@keyframes iosBubbleIn {
+  0% { opacity: 0; transform: scale(0.92) translateY(6px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes iosFade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes iosSlideUp {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes iosPop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes iosTyping {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

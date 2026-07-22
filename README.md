@@ -60,6 +60,10 @@ Open the **Supabase Dashboard SQL Editor** (`https://supabase.com/dashboard/proj
 | 7 | `supabase/migrations/007_create_indexes.sql` | Performance indexes |
 | 8 | `supabase/migrations/008_create_storage_bucket.sql` | Storage bucket + RLS |
 | 9 | `supabase/migrations/009_create_default_admin.sql` | Default admin account |
+| 10 | `supabase/migrations/010_fix_rls_and_profiles.sql` | RLS + profiles fixes |
+| 11 | `supabase/migrations/011_batch_unread_counts.sql` | Batched unread-count RPC |
+| 12 | `supabase/migrations/012_p0_features.sql` | P0 features (pins, reactions, forwarding) |
+| 13 | `supabase/migrations/013_last_messages_rpc.sql` | Sidebar last-message RPC (DISTINCT ON) |
 
 After migrations, go to **Database → Replication → supabase_realtime** and toggle `messages` on.
 
