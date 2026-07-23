@@ -1,4 +1,4 @@
-# FileKiwi Chat
+# Chat Web Application for Every Small Company
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
@@ -372,4 +372,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Built with ❤️ by the FileKiwi Team
+Built with ❤️ by the ApexSofteck Team
+www.apexsofteck.com
