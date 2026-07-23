@@ -1,21 +1,3 @@
 ```
-# Dependencies
 node_modules/
-
-# Build artifacts
-dist/
-build/
-*.tsbuildinfo
-
-# Environment variables
-.env
-.env.local
-.env.*
-
-# Logs
-*.log
-
-# Coverage
-coverage/
-.nyc_output/
 ```

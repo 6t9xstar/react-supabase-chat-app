@@ -1,0 +1,17 @@
+{
+  "name": "Apex Chat",
+  "short_name": "Apex Chat",
+  "description": "Internal team communication platform",
+  "start_url": "/chat/index.html",
+  "display": "standalone",
+  "background_color": "#171717",
+  "theme_color": "#171717",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
